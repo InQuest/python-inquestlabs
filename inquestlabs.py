@@ -38,16 +38,23 @@ Options:
 # python 2/3 compatability.
 from __future__ import print_function
 
-__version__ = 1.0
+try:
+    import configparser
+except:
+    import ConfigParser as configparser
 
-import configparser
+# batteries not included.
+import docopt
 import requests
+
+# standard libraries.
 import hashlib
 import random
-import docopt
 import time
 import json
 import os
+
+__version__ = 1.0
 
 VALID_CAT  = ["ext", "hash", "ioc"]
 VALID_EXT  = ["code", "context", "metadata", "ocr"]
