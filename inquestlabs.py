@@ -484,6 +484,78 @@ class inquestlabs_api:
         return self.__API("/dfi/upload", method="POST", path=path)
 
     ####################################################################################################################
+    def iocdb_list (self):
+        """
+        Retrieve a list of the most recent entries added to the InQuest Labs IOC database.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        return self.__API("/iocdb/list")
+
+    ####################################################################################################################
+    def iocdb_search (self, keyword):
+        """
+        Search the InQuest Labs IOC database for entries matching the keyword.
+
+        :type  keyword: str
+        :param keyword: Search term.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        return self.__API("/iocdb/search", dict(keyword=keyword))
+
+    ####################################################################################################################
+    def iocdb_sources (self):
+        """
+        Retrieves the list of sources that fuel the InQuest Labs IOC database.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        return self.__API("/iocdb/sources")
+
+    ####################################################################################################################
+    def repdb_list (self):
+        """
+        Retrieve a list of the most recent entries added to the InQuest Labs reputation database.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        return self.__API("/repdb/list")
+
+    ####################################################################################################################
+    def repdb_search (self, keyword):
+        """
+        Search the InQuest Labs reputation database for entries matching the keyword.
+
+        :type  keyword: str
+        :param keyword: Search term.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        return self.__API("/repdb/search", dict(keyword=keyword))
+
+    ####################################################################################################################
+    def repdb_sources (self):
+        """
+        Retrieves the list of sources that fuel the InQuest Labs reputaiton database.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        return self.__API("/repdb/sources")
+
+    ####################################################################################################################
     def stats (self):
         """
         Retrieve statistics from InQuest Labs.
@@ -683,19 +755,47 @@ def main ():
             print("successfully uploaded %s in %d seconds." % (args['<path>'], time.time() - start))
             print("see results at: https://labs.inquest.net/dfi/sha256/%s" % sha256)
 
+        # huh?
+        else:
+            raise inquestlabs_exception("dfi argument parsing fail.")
+
     ### IOCDB ##########################################################################################################
     elif args['iocdb']:
-        pass
+
         # inquestlabs [options] iocdb list
+        if args['list']:
+            print(json.dumps(labs.iocdb_list()))
+
         # inquestlabs [options] iocdb search <keyword>
+        elif args['search']:
+            print(json.dumps(labs.iocdb_search(args['<keyword>'])))
+
         # inquestlabs [options] iocdb sources
+        elif args['sources']:
+            print(json.dumps(labs.iocdb_sources()))
+
+        # huh?
+        else:
+            raise inquestlabs_exception("iocdb argument parsing fail.")
 
     ### REPDB ##########################################################################################################
     elif args['repdb']:
-        pass
+
         # inquestlabs [options] repdb list
+        if args['list']:
+            print(json.dumps(labs.repdb_list()))
+
         # inquestlabs [options] repdb search <keyword>
+        elif args['search']:
+            print(json.dumps(labs.repdb_search(args['<keyword>'])))
+
         # inquestlabs [options] repdb sources
+        elif args['sources']:
+            print(json.dumps(labs.repdb_sources()))
+
+        # huh?
+        else:
+            raise inquestlabs_exception("repdb argument parsing fail.")
 
     ### YARA ###########################################################################################################
     elif args['yara']:
@@ -727,10 +827,17 @@ def main ():
         elif args['widere']:
             print(labs.yara_widere(args['<regex>'], endian))
 
+        # huh?
+        else:
+            raise inquestlabs_exception("yara argument parsing fail.")
+
     ### MISCELLANEOUS ##################################################################################################
     elif args['stats']:
         print(json.dumps(labs.stats()))
 
+    # huh?
+    else:
+        raise inquestlabs_exception("argument parsing fail.")
 
 ########################################################################################################################
 if __name__ == '__main__':
