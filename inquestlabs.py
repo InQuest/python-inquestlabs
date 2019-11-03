@@ -19,9 +19,10 @@ Usage:
     inquestlabs [options] repdb list
     inquestlabs [options] repdb search <keyword>
     inquestlabs [options] repdb sources
-    inquestlabs [options] yara b64re <regex> [(--widen-be|--widen-le)]
+    inquestlabs [options] yara (b64re|base64re) <regex> [(--big-endian|--little-endian)]
     inquestlabs [options] yara hexcase <instring>
     inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
+    inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
     inquestlabs [options] stats
 
 Options:
@@ -123,8 +124,7 @@ class inquestlabs_api:
                 except:
                     raise inquestlabs_exception("unable to find inquestlabs.apikey in: %s" % self.config_file)
 
-            # if we still don't have an API key that's fine! InQuest Labs will simply work with some rate limits.
-
+            # NOTE: if we still don't have an API key that's fine! InQuest Labs will simply work with some rate limits.
 
     ####################################################################################################################
     def __API (self, api, data=None, path=None, method="GET", raw=False):
@@ -222,7 +222,6 @@ class inquestlabs_api:
 
             # TODO add rate limit tracking and exhaustion check.
 
-
     ####################################################################################################################
     def __HASH (self, path=None, bytes=None, algorithm="md5", block_size=16384, fmt="digest"):
         """
@@ -283,14 +282,12 @@ class inquestlabs_api:
         else: # digest
             return hashfunc.hexdigest()
 
-
     ####################################################################################################################
     # hash shorcuts.
     def md5    (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="md5")
     def sha1   (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha1")
     def sha256 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha256")
     def sha512 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha512")
-
 
     ####################################################################################################################
     def dfi_attributes (self, sha256, filter_by=None):
@@ -339,7 +336,6 @@ class inquestlabs_api:
         # return attributes.
         return attributes
 
-
     ####################################################################################################################
     def dfi_details (self, sha256, attributes=False):
         """
@@ -361,7 +357,6 @@ class inquestlabs_api:
             data['attributes'] = self.dfi_attributes(sha256)
 
         return data
-
 
     ####################################################################################################################
     def dfi_download (self, sha256, path):
@@ -390,7 +385,6 @@ class inquestlabs_api:
         with open(path, "wb+") as fh:
             fh.write(data)
 
-
     ####################################################################################################################
     def dfi_list (self):
         """
@@ -401,7 +395,6 @@ class inquestlabs_api:
         """
 
         return self.__API("/dfi/list")
-
 
     ####################################################################################################################
     def dfi_search (self, category, subcategory, keyword):
@@ -449,7 +442,6 @@ class inquestlabs_api:
 
         return self.__API("/dfi/search/%s/%s" % (category, subcategory), data)
 
-
     ####################################################################################################################
     def dfi_sources (self):
         """
@@ -461,7 +453,6 @@ class inquestlabs_api:
         """
 
         return self.__API("/dfi/sources")
-
 
     ####################################################################################################################
     def dfi_upload (self, path):
@@ -492,8 +483,115 @@ class inquestlabs_api:
         # dance with the API.
         return self.__API("/dfi/upload", method="POST", path=path)
 
+    ####################################################################################################################
+    def stats (self):
+        """
+        Retrieve statistics from InQuest Labs.
+
+        :rtype:  list
+        :return: List of dictionaries.
+        """
+
+        return self.__API("/stats")
+
+    ####################################################################################################################
+    def yara_b64re (self, regex, endian=None):
+        """
+        Save time and avoid tedious manual labor by automatically converting plain-text regular expressions into their
+        base64 compatible form.
+
+        :type  regex:  str
+        :param regex:  Regular expression to convert.
+        :type  endian: str
+        :param endian: Optional endianess, can be either "BIG" or "LITTLE".
+
+        :rtype:  str
+        :return: Base64 matching regular expression.
+        """
+
+        # initialize data dictionary with supplied regular expression.
+        data = dict(instring=regex)
+
+        # splice in the appropriate endianess option if supplied.
+        if endian:
+            endian = endian.upper()
+
+            if endian == "BIG":
+                data['option'] = "widen_big"
+            elif endian == "LITTLE":
+                data['option'] = "widen_little"
+            else:
+                raise inquestlabs_exception("invalid endianess supplied to yara_b64re: %s" % endian)
+
+        # dance with the API and return results.
+        return self.__API("/yara/base64re", data)
+
+    ####################################################################################################################
+    def yara_hexcase (self, instring):
+        """
+        Translate hex encoded strings into a regular expression form that is agnostic to MixED CaSE CharACtErS.
+
+        :type  instring: str
+        :param instring: String to convert.
+
+        :rtype:  str
+        :return: Mixed hex case insensitive regular expression.
+        """
+
+        return self.__API("/yara/mixcase", dict(instring=instring))
+
+    ####################################################################################################################
+    def yara_widere (self, regex, endian=None):
+        """
+        Save time and avoid tedious manual labor by automating converting ascii regular expressions widechar forms.
+
+        :type  regex:  str
+        :param regex:  Regular expression to convert.
+        :type  endian: str
+        :param endian: Optional endianess, can be either "BIG" or "LITTLE".
+
+        :rtype:  str
+        :return: Widened regular expression.
+        """
+
+        # initialize data dictionary with supplied regular expression.
+        data = dict(instring=regex)
+
+        # splice in the appropriate endianess option if supplied.
+        if endian:
+            endian = endian.upper()
+
+            if endian in ["BIG", "LITTLE"]:
+                data['kind'] = endian
+            else:
+                raise inquestlabs_exception("invalid endianess supplied to yara_b64re: %s" % endian)
+
+        # dance with the API and return results.
+        return self.__API("/yara/widere", data)
+
+    ####################################################################################################################
+    def yara_uint (self, magic, offset=0, is_hex=False):
+        """
+        Improve the performance of your YARA rules by converting string comparisons into unsigned integer pointer
+        dereferences.
+
+        :type  magic:  str
+        :param magic:  String we which to convert to unit() trigger.
+        :type  offset: int
+        :param offset: Optional offset in hex (0xde) or decimal (222) to look for magic at, defaults to 0.
+        :type  hex:    bool
+        :param hex:    Raise this flag to treat 'magic' as hex encoded bytes.
+
+        :rtype:  str
+        :return: YARA condition looking for magic at offset via uint() magic.
+        """
+
+        return self.__API("/yara/trigger", dict(trigger=magic, offset=offset, is_hex=is_hex))
 
 ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+
 def main ():
     args = docopt.docopt(__doc__, version=__version__)
 
@@ -505,24 +603,30 @@ def main ():
     # instantiate interface to InQuest Labs.
     labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'])
 
-    ### DFI
+    ### DFI ############################################################################################################
     if args['dfi']:
 
+        # inquestlabs [options] dfi attributes <sha256> [--filter=<filter>]
         if args['attributes']:
             print(json.dumps(labs.dfi_attributes(args['<sha256>'], args['--filter'])))
 
-        if args['details']:
+        # inquestlabs [options] dfi details <sha256> [--attributes]
+        elif args['details']:
             print(json.dumps(labs.dfi_details(args['<sha256>'], args['--attributes'])))
 
-        if args['download']:
+        # inquestlabs [options] dfi download <sha256> <path>
+        elif args['download']:
             start = time.time()
             labs.dfi_download(args['<sha256>'], args['<path>'])
             print("saved %s as '%s' in %d seconds." % (args['<sha256>'], args['<path>'], time.time() - start))
 
-        if args['list']:
+        # inquestlabs [options] dfi list
+        elif args['list']:
             print(json.dumps(labs.dfi_list()))
 
-        if args['search']:
+        elif args['search']:
+
+            # inquestlabs [options] dfi search (code|context|metadata|ocr) <keyword>
             if args['<keyword>']:
                 if args['code']:
                     results = labs.dfi_search("ext", "code", args['<keyword>'])
@@ -535,6 +639,7 @@ def main ():
                 else:
                     raise inquestlabs_exception("keyword search argument parsing fail.")
 
+            # inquestlabs [options] dfi search (md5|sha1|sha256|sha512) <hash>
             elif args['<hash>']:
                 if args['md5']:
                     results = labs.dfi_search("hash", "md5", args['<hash>'])
@@ -547,6 +652,7 @@ def main ():
                 else:
                     raise inquestlabs_exception("hash search argument parsing fail.")
 
+            # inquestlabs [options] dfi search (domain|email|filename|ip|url|xmpid) <ioc>
             elif args['<ioc>']:
                 if args['domain']:
                     results = labs.dfi_search("ioc", "domain", args['<ioc>'])
@@ -563,24 +669,67 @@ def main ():
                 else:
                     raise inquestlabs_exception("ioc search argument parsing fail.")
 
+            # search results.
             print(json.dumps(results))
 
-        if args['sources']:
+        # inquestlabs [options] dfi sources
+        elif args['sources']:
             print(json.dumps(labs.dfi_sources()))
 
-        if args['upload']:
+        # inquestlabs [options] dfi upload <path>
+        elif args['upload']:
             start  = time.time()
             sha256 = labs.dfi_upload(args['<path>'])
             print("successfully uploaded %s in %d seconds." % (args['<path>'], time.time() - start))
             print("see results at: https://labs.inquest.net/dfi/sha256/%s" % sha256)
 
-    ### IOCDB
+    ### IOCDB ##########################################################################################################
     elif args['iocdb']:
         pass
+        # inquestlabs [options] iocdb list
+        # inquestlabs [options] iocdb search <keyword>
+        # inquestlabs [options] iocdb sources
 
-    ### REPDB
+    ### REPDB ##########################################################################################################
     elif args['repdb']:
         pass
+        # inquestlabs [options] repdb list
+        # inquestlabs [options] repdb search <keyword>
+        # inquestlabs [options] repdb sources
+
+    ### YARA ###########################################################################################################
+    elif args['yara']:
+
+        # normalize big/little endian switches.
+        if args['--big-endian']:
+            endian = "BIG"
+        elif args['--little-endian']:
+            endian = "LITTLE"
+        else:
+            endian = None
+
+        # NOTE: we don't json.dumps() these values as they are likely going to be wanted to be used raw and not piped
+        #       into another JSON expectant tool.
+
+        # inquestlabs [options] yara (b64re|base64re) <regex> [(--big-endian|--little-endian)]
+        if args['b64re'] or args['base64re']:
+            print(labs.yara_b64re(args['<regex>'], endian))
+
+        # inquestlabs [options] yara hexcase <instring>
+        elif args['hexcase']:
+            print(labs.yara_hexcase(args['<instring>']))
+
+        # inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
+        elif args['uint']:
+            print(labs.yara_uint(args['<instring>'], args['--offset'], args['--hex']))
+
+        # inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
+        elif args['widere']:
+            print(labs.yara_widere(args['<regex>'], endian))
+
+    ### MISCELLANEOUS ##################################################################################################
+    elif args['stats']:
+        print(json.dumps(labs.stats()))
 
 
 ########################################################################################################################
