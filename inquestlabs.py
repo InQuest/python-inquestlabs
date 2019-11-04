@@ -118,28 +118,46 @@ class inquestlabs_api:
         if self.config_file is None:
             self.config_file = os.path.join(os.path.expanduser("~"), ".iqlabskey")
 
-        # if no API key was specified...
-        if not self.api_key:
+        elif "~" in self.config_file:
+            self.config_file = os.path.expanduser(self.config_file)
+
+        # if an API key was specified, note the source.
+        if self.api_key:
+            self.api_key_source = "supplied"
+
+        # otherwise, we don't have an API source yet, we'll check the environement and config files though.
+        else:
+            self.api_key_source = "N/A"
 
             # check the environment for one
             self.api_key = os.environ.get("IQLABS_APIKEY")
 
-            # if we still don't have an API key, try loading one from the config file. format:
-            #   $ cat .iqlabskey
-            #   [inquestlabs]
-            #   apikey: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef
-            if not self.api_key and os.path.exists(self.config_file) and os.path.isfile(self.config_file):
-                config = configparser.ConfigParser()
+            if self.api_key:
+                self.api_key_source = "environment"
 
-                try:
-                    config.read(self.config_file)
-                except:
-                    raise inquestlabs_exception("invalid configuration file: %s" % self.config_file)
+            # if we still don't have an API key, try loading one from the config file.
+            else:
 
-                try:
-                    self.api_key = config.get("inquestlabs", "apikey")
-                except:
-                    raise inquestlabs_exception("unable to find inquestlabs.apikey in: %s" % self.config_file)
+                # config file format:
+                #   $ cat .iqlabskey
+                #   [inquestlabs]
+                #   apikey: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef
+                if os.path.exists(self.config_file) and os.path.isfile(self.config_file):
+
+                    config = configparser.ConfigParser()
+
+                    try:
+                        config.read(self.config_file)
+                    except:
+                        raise inquestlabs_exception("invalid configuration file: %s" % self.config_file)
+
+                    try:
+                        self.api_key = config.get("inquestlabs", "apikey")
+                    except:
+                        raise inquestlabs_exception("unable to find inquestlabs.apikey in: %s" % self.config_file)
+
+                    # update the source, include the path.
+                    self.api_key_source = "config: %s" % self.config_file
 
             # NOTE: if we still don't have an API key that's fine! InQuest Labs will simply work with some rate limits.
 
@@ -569,8 +587,8 @@ class inquestlabs_api:
             limit_banner  = "%d API requests made. %d API requests remaining. Rate limit window resets on %s."
             limit_banner %= self.api_requests_made, self.rlimit_requests_remaining, self.rlimit_reset_epoch_ctime
         else:
-            limit_banner  = "%d API requests made. No rate limit!"
-            limit_banner %= self.api_requests_made
+            limit_banner  = "%d API requests made. No rate limit! API key sourced from %s."
+            limit_banner %= self.api_requests_made, self.api_key_source
 
         return limit_banner
 
