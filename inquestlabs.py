@@ -31,6 +31,7 @@ Options:
     --debug             Docopt debugging.
     -h --help           Show this screen.
     --hex               Treat <instring> as hex bytes.
+    -l --limits         Show remaining API credits and limit reset window.
     --proxy=<proxy>     Intermediate proxy
     --version           Show version.
 """
@@ -52,6 +53,7 @@ import hashlib
 import random
 import time
 import json
+import sys
 import os
 
 __version__ = 1.0
@@ -93,12 +95,20 @@ class inquestlabs_api:
         :param verify_ssl: Toggles SSL certificate verification when communicating with the API.
         """
 
+        # internalize supplied parameters.
         self.api_key     = api_key
         self.base_url    = base_url
         self.config_file = config
         self.num_retries = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
+
+        # internal rate limit tracking.
+        self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
+        self.rlimit_reset_epoch_time   = None   # time, in seconds from epoch, that rate limit window resets.
+        self.rlimit_reset_epoch_ctime  = None   # same as above, but in ctime human readable format.
+        self.rlimit_seconds_to_reset   = None   # seconds to reset time.
+        self.api_requests_made         = 0      # keep track of how many API requests we've made.
 
         # if no base URL was specified, use the default.
         if self.base_url is None:
@@ -187,6 +197,7 @@ class inquestlabs_api:
         while 1:
             try:
                 response = requests.request(method, endpoint, **kwargs)
+                self.api_requests_made += 1
                 break
 
             except:
@@ -199,6 +210,19 @@ class inquestlabs_api:
                 message = "exceeded %s attempts to communicate with InQuest Labs API endpoint %s."
                 message %= self.num_retries, endpoint
                 raise inquestlabs_exception(message)
+
+        # update internal rate limit tracking variables.
+        if hasattr(response, "headers"):
+            self.rlimit_requests_remaining = response.headers.get('X-RateLimit-Remaining')
+            self.rlimit_reset_epoch_time   = response.headers.get('X-RateLimit-Reset')
+
+            if self.rlimit_requests_remaining:
+                self.rlimit_requests_remaining = int(self.rlimit_requests_remaining)
+
+            if self.rlimit_reset_epoch_time:
+                self.rlimit_reset_epoch_time  = int(self.rlimit_reset_epoch_time)
+                self.rlimit_seconds_to_reset  = int(self.rlimit_reset_epoch_time - time.time())
+                self.rlimit_reset_epoch_ctime = time.ctime(self.rlimit_reset_epoch_time)
 
         # all good.
         if response.status_code == 200:
@@ -220,14 +244,16 @@ class inquestlabs_api:
                 message %= endpoint, response_json.get("error", "n/a")
                 raise inquestlabs_exception(message)
 
-        # something went wrong.
+        # rate limit exhaustion.
+        elif response.status_code == 429:
+            raise inquestlabs_exception("status=429 rate limit exhausted!")
+
+        # something else went wrong.
         else:
             response_json = response.json()
             message  = "status=%d error communicating with %s: %s"
             message %= response.status_code, endpoint, response_json.get("error", "n/a")
             raise inquestlabs_exception(message)
-
-            # TODO add rate limit tracking and exhaustion check.
 
     ####################################################################################################################
     def __HASH (self, path=None, bytes=None, algorithm="md5", block_size=16384, fmt="digest"):
@@ -525,6 +551,28 @@ class inquestlabs_api:
         """
 
         return self.API("/iocdb/sources")
+
+    ####################################################################################################################
+    def rate_limit_banner (self):
+        """
+        Returns a string describing number of API requests made since instantiation, remaining API credits (if a rate
+        limit is imposed), and when the rate limit window resets.
+
+        :rtype:  str
+        :return: Request and rate limit information, in human readable format.
+        """
+
+        if not self.api_requests_made:
+            return "Rate limit information not available, no API requests made."
+
+        if self.rlimit_requests_remaining:
+            limit_banner  = "%d API requests made. %d API requests remaining. Rate limit window resets on %s."
+            limit_banner %= self.api_requests_made, self.rlimit_requests_remaining, self.rlimit_reset_epoch_ctime
+        else:
+            limit_banner  = "%d API requests made. No rate limit!"
+            limit_banner %= self.api_requests_made
+
+        return limit_banner
 
     ####################################################################################################################
     def repdb_list (self):
@@ -845,6 +893,10 @@ def main ():
     # huh?
     else:
         raise inquestlabs_exception("argument parsing fail.")
+
+    ### WRAP UP ########################################################################################################
+    if args['--limits']:
+        sys.stderr.write(labs.rate_limit_banner() + "\n")
 
 ########################################################################################################################
 if __name__ == '__main__':
