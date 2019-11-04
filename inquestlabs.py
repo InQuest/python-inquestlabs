@@ -33,6 +33,7 @@ Options:
     --hex               Treat <instring> as hex bytes.
     -l --limits         Show remaining API credits and limit reset window.
     --proxy=<proxy>     Intermediate proxy
+    --verbose=<level>   Verbosity level, outputs to stderr [default: 0].
     --version           Show version.
 """
 
@@ -63,6 +64,10 @@ VALID_EXT  = ["code", "context", "metadata", "ocr"]
 VALID_HASH = ["md5", "sha1", "sha256", "sha512"]
 VALID_IOC  = ["domain", "email", "filename", "ip", "url", "xmpid"]
 
+# verbosity levels.
+INFO  = 1
+DEBUG = 2
+
 ########################################################################################################################
 class inquestlabs_exception(Exception):
     pass
@@ -75,7 +80,7 @@ class inquestlabs_api:
     """
 
     ####################################################################################################################
-    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True):
+    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True, verbose=0):
         """
         Instantiate an interface to InQuest Labs. API key is optional but sourced from (in order): argument, environment
         variable, or configuration file. Proxy dictionary is a raw pass thru to python-requests, valid keys are 'http'
@@ -93,6 +98,8 @@ class inquestlabs_api:
         :param retries:    Number of times to attempt API request before giving up.
         :type  verify_ssl: bool
         :param verify_ssl: Toggles SSL certificate verification when communicating with the API.
+        :type  verbose:    int
+        :param verbose:    Values greater than zero provide increased verbosity.
         """
 
         # internalize supplied parameters.
@@ -102,6 +109,7 @@ class inquestlabs_api:
         self.num_retries = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
+        self.verbosity   = verbose
 
         # internal rate limit tracking.
         self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
@@ -113,6 +121,7 @@ class inquestlabs_api:
         # if no base URL was specified, use the default.
         if self.base_url is None:
             self.base_url = "https://labs.inquest.net/api"
+            self.__VERBOSE("base_url=%s" % self.base_url, DEBUG)
 
         # if no config file was supplied, use a default path of ~/.iqlabskey.
         if self.config_file is None:
@@ -142,6 +151,8 @@ class inquestlabs_api:
                     raise inquestlabs_exception("unable to find inquestlabs.apikey in: %s" % self.config_file)
 
             # NOTE: if we still don't have an API key that's fine! InQuest Labs will simply work with some rate limits.
+            self.__VERBOSE("api_key=%s" % self.api_key, DEBUG)
+            self.__VERBOSE("api_key_source=%s" % self.api_key_source, INFO)
 
     ####################################################################################################################
     def API (self, api, data=None, path=None, method="GET", raw=False):
@@ -194,13 +205,18 @@ class inquestlabs_api:
         endpoint = self.base_url + api
         attempt  = 0
 
+        self.__VERBOSE("%s %s" % (method, api), INFO)
+
         while 1:
             try:
                 response = requests.request(method, endpoint, **kwargs)
                 self.api_requests_made += 1
+                self.__VERBOSE("[%d] %s" % (self.api_requests_made, kwargs), DEBUG)
                 break
 
-            except:
+            except Exception as e:
+                self.__VERBOSE("API exception: %s" % e, INFO)
+
                 # 0.4, 1.6, 6.4, 25.6, ...
                 time.sleep(random.uniform(0, 4 ** attempt * 100 / 1000.0))
                 attempt += 1
@@ -223,6 +239,9 @@ class inquestlabs_api:
                 self.rlimit_reset_epoch_time  = int(self.rlimit_reset_epoch_time)
                 self.rlimit_seconds_to_reset  = int(self.rlimit_reset_epoch_time - time.time())
                 self.rlimit_reset_epoch_ctime = time.ctime(self.rlimit_reset_epoch_time)
+
+        self.__VERBOSE("API status_code=%d" % response.status_code, INFO)
+        self.__VERBOSE(response.content, DEBUG)
 
         # all good.
         if response.status_code == 200:
@@ -314,6 +333,20 @@ class inquestlabs_api:
 
         else: # digest
             return hashfunc.hexdigest()
+
+    ####################################################################################################################
+    def __VERBOSE (self, message, verbosity=INFO):
+        """
+        Outputs 'message' to stderr if instance verbosity is equal to or greater than the supplied verbosity.
+
+        :type  message:   str
+        :param message:   Path to file to hash or None if supplying bytes.
+        :type  verbosity: int
+        :param verbosity: Minimum verbosity level required to display message.
+        """
+
+        if self.verbosity >= verbosity:
+            sys.stderr.write("[verbosity=%d] %s\n" % (self.verbosity, message))
 
     ####################################################################################################################
     # hash shorcuts.
@@ -728,7 +761,7 @@ def main ():
         return
 
     # instantiate interface to InQuest Labs.
-    labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'])
+    labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'], verbose=int(args['--verbose']))
 
     ### DFI ############################################################################################################
     if args['dfi']:
