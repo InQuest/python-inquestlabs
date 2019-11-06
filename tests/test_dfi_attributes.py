@@ -5,7 +5,6 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-
 @pytest.fixture
 def mock_attribs():
     return [
@@ -64,6 +63,64 @@ def mock_attribs():
          "value": "xmp.iid:dc986887-b6b9-324c-afbd-cf38bd4f373e"
          }]
 
+
+@pytest.fixture
+def mock_attribs():
+    return [
+        {"attribute": "domain",
+         "category": "ioc", 
+         "count": 1,
+          "value": "aHX3xw.ao"
+        },
+        {"attribute": "domain",
+         "category": "ioc",
+          "count": 1,
+           "value": "aHX3xw.bt"
+        },
+        {"attribute": "url",
+         "category": "ioc",
+          "count": 1,
+           "value": "aHX3xw.bt"
+        },
+        {"attribute": "email",
+         "category": "ioc",
+          "count": 1,
+           "value": "aHX3xw.bt"
+        },
+        {"attribute": "domain",
+         "category": "ioc", 
+         "count": 1, 
+         "value": "ebug.Pr"
+         },
+         {"attribute": "domain",
+          "category": "ioc",
+           "count": 1,
+            "value": "Paint.NET"
+        }, 
+        {"attribute": "filename",
+         "category": "ioc", 
+         "count": 1, 
+         "value": "FM20.DLL"
+        }, 
+        {"attribute": "filename",
+         "category": "ioc",
+          "count": 1, 
+          "value": "MSO.DLL"
+        }, 
+        {"attribute": "filename",
+         "category": "ioc", 
+         "count": 1, 
+         "value": "VBE7.DLL"
+        }, 
+        {"attribute": "xmpid",
+         "category": "ioc",
+          "count": 1,
+         "value": "xmp.iid:c69177cd-9fe4-7044-be5a-e60c0cec53fb"},
+        {"attribute": "xmpid",
+         "category": "ioc",
+          "count": 1, 
+          "value": "xmp.iid:dc986887-b6b9-324c-afbd-cf38bd4f373e"
+        }]
 
 def test_dfi_filter_invalid(labs):
     with pytest.raises(inquestlabs_exception) as excinfo:
