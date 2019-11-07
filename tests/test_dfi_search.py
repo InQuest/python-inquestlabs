@@ -1,6 +1,10 @@
+import pytest
+import json
+from inquestlabs import inquestlabs_exception
 
-
-test_output="""{
+@pytest.fixture
+def mock_response():
+  response="""{
   "data": [
     {
       "analysis_completed": true,
@@ -52,116 +56,60 @@ test_output="""{
       "size": 2069673,
       "subcategory": "macro_hunter",
       "subcategory_url": "https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/macro_hunter.rule"
-    }
-  ],
-  "success": true
-}
-"response=200"
+    }],"success": true}"""
+  return json.loads(response)
 
-"""
+def test_invalid_category(labs, mocker):
+    with pytest.raises(inquestlabs_exception) as excinfo:
+        labs.dfi_search("BAD_CATEGORY","code", "mock_keyword")
+    
+    assert "invalid category" in str(excinfo.value)
 
-"""test dfi_search by md5
-{
-  "data": [
-    {
-      "analysis_completed": true,
-      "classification": "MALICIOUS",
-      "file_type": "OLE",
-      "first_seen": "Fri, 08 Jun 2018 22:19:06 GMT",
-      "inquest_alerts": [],
-      "last_inquest_featext": "Tue, 22 Oct 2019 21:37:46 GMT",
-      "len_code": 0,
-      "len_context": 0,
-      "len_metadata": 668,
-      "len_ocr": 0,
-      "mime_type": "application/cdfv2",
-      "sha256": "0001104678312b574df5d7fb44da8a2800b48d3442a949ac624064baaa574119",
-      "size": 4104,
-      "subcategory": "maldoc_hunter",
-      "subcategory_url": "https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/maldoc_hunter.rule"
-    }
-  ],
-  "success": true
-}
-"response=200"
-"""
+def test_invalid_subcategory(labs, mocker):
+    with pytest.raises(inquestlabs_exception) as excinfo:
+        labs.dfi_search("hash","BAD_CATEGORY", "mock_keyword")
+    
+    assert "invalid subcategory" in str(excinfo.value)
 
-"""tes dfi_search by sha1
+def test_valid_ext(labs,mocker,mock_response):
+  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+  results= labs.dfi_search("ext","metadata","mock")
+  assert len(results["data"]) == 3
 
-{
-  "data": [
-    {
-      "analysis_completed": true,
-      "classification": "MALICIOUS",
-      "file_type": "OLE",
-      "first_seen": "Fri, 08 Jun 2018 22:19:06 GMT",
-      "inquest_alerts": [],
-      "last_inquest_featext": "Tue, 22 Oct 2019 21:37:46 GMT",
-      "len_code": 0,
-      "len_context": 0,
-      "len_metadata": 668,
-      "len_ocr": 0,
-      "mime_type": "application/cdfv2",
-      "sha256": "0001104678312b574df5d7fb44da8a2800b48d3442a949ac624064baaa574119",
-      "size": 4104,
-      "subcategory": "maldoc_hunter",
-      "subcategory_url": "https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/maldoc_hunter.rule"
-    }
-  ],
-  "success": true
-}
-"""
+def test_valid_hash(labs,mocker,mock_response):
+  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+  results= labs.dfi_search("hash","md5","mock")
+  assert len(results["data"]) == 3
 
-"""test dfi_search by sha256
+def test_valid_other(labs,mocker,mock_response):
+  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+  results= labs.dfi_search("ioc","domain","mock")
+  assert len(results["data"]) == 3
 
-{
-  "data": [
-    {
-      "analysis_completed": true,
-      "classification": "MALICIOUS",
-      "file_type": "OLE",
-      "first_seen": "Fri, 08 Jun 2018 22:19:06 GMT",
-      "inquest_alerts": [],
-      "last_inquest_featext": "Tue, 22 Oct 2019 21:37:46 GMT",
-      "len_code": 0,
-      "len_context": 0,
-      "len_metadata": 668,
-      "len_ocr": 0,
-      "mime_type": "application/cdfv2",
-      "sha256": "0001104678312b574df5d7fb44da8a2800b48d3442a949ac624064baaa574119",
-      "size": 4104,
-      "subcategory": "maldoc_hunter",
-      "subcategory_url": "https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/maldoc_hunter.rule"
-    }
-  ],
-  "success": true
-}
-"""
 
-""" test dfi_search by sha512
+def test_invalid_category_with_key(labs_with_key, mocker):
+    with pytest.raises(inquestlabs_exception) as excinfo:
+        labs_with_key.dfi_search("BAD_CATEGORY","code", "mock_keyword")
+    
+    assert "invalid category" in str(excinfo.value)
 
-{
-  "data": [
-    {
-      "analysis_completed": true,
-      "classification": "MALICIOUS",
-      "file_type": "OLE",
-      "first_seen": "Fri, 08 Jun 2018 22:19:06 GMT",
-      "inquest_alerts": [],
-      "last_inquest_featext": "Tue, 22 Oct 2019 21:37:46 GMT",
-      "len_code": 0,
-      "len_context": 0,
-      "len_metadata": 668,
-      "len_ocr": 0,
-      "mime_type": "application/cdfv2",
-      "sha256": "0001104678312b574df5d7fb44da8a2800b48d3442a949ac624064baaa574119",
-      "size": 4104,
-      "subcategory": "maldoc_hunter",
-      "subcategory_url": "https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/maldoc_hunter.rule"
-    }
-  ],
-  "success": true
-}
-"response=200"
+def test_invalid_subcategory_with_key(labs_with_key, mocker):
+    with pytest.raises(inquestlabs_exception) as excinfo:
+        labs_with_key.dfi_search("hash","BAD_CATEGORY", "mock_keyword")
+    
+    assert "invalid subcategory" in str(excinfo.value)
 
-"""
+def test_valid_ext_with_key(labs_with_key,mocker,mock_response):
+  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+  results= labs_with_key.dfi_search("ext","metadata","mock")
+  assert len(results["data"]) == 3
+
+def test_valid_hash_with_key(labs_with_key,mocker,mock_response):
+  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+  results= labs_with_key.dfi_search("hash","md5","mock")
+  assert len(results["data"]) == 3
+
+def test_valid_other_with_key(labs_with_key,mocker,mock_response):
+  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+  results= labs_with_key.dfi_search("ioc","domain","mock")
+  assert len(results["data"]) == 3
