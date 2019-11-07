@@ -74,3 +74,24 @@ def test_dfi_details_with_attributes(labs,mocker):
     assert details["sha256"] == "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"
 
     assert "attributes" in details.keys()
+
+
+def test_dfi_details_invalid_hash(labs_with_key):
+    with pytest.raises(inquestlabs_exception) as excinfo:
+        labs_with_key.dfi_details("mock")
+    
+    assert "value is not a valid hash" in str(excinfo.value)
+
+
+def test_dfi_details_with_key(labs_with_key,mocker):
+
+    details = labs_with_key.dfi_details("30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c")
+    assert details["sha256"] == "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"
+
+
+def test_dfi_details_with_attributes(labs_with_key,mocker):
+
+    details = labs_with_key.dfi_details("30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c", attributes=True)
+    assert details["sha256"] == "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"
+
+    assert "attributes" in details.keys()
