@@ -3,18 +3,9 @@ import sys, os
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from inquestlabs import inquestlabs_api
 from inquestlabs import inquestlabs_exception
 
-@pytest.fixture
-def labs():
-    labs = inquestlabs_api()
-    return labs
 
-@pytest.fixture
-def labs_with_key():
-    labs_api = inquestlabs_api(api_key="mock")
-    return labs_api
 
 @pytest.fixture
 def mock_attribs():

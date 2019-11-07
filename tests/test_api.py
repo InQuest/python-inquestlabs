@@ -3,13 +3,8 @@ import sys, os
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from inquestlabs import inquestlabs_api
 from inquestlabs import inquestlabs_exception
 
-@pytest.fixture
-def labs():
-    labs = inquestlabs_api()
-    return labs
 
 def test_api_invalid_method(labs):
     with pytest.raises(Exception)as excinfo:
