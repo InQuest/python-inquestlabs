@@ -68,7 +68,6 @@ def test_invalid_category(labs, mocker):
 def test_invalid_subcategory(labs, mocker):
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs.dfi_search("hash","BAD_CATEGORY", "mock_keyword")
-    
     assert "invalid subcategory" in str(excinfo.value)
 
 def test_valid_ext(labs,mocker,mock_response):
@@ -85,7 +84,6 @@ def test_valid_other(labs,mocker,mock_response):
   mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
   results= labs.dfi_search("ioc","domain","mock")
   assert len(results["data"]) == 3
-
 
 def test_invalid_category_with_key(labs_with_key, mocker):
     with pytest.raises(inquestlabs_exception) as excinfo:
