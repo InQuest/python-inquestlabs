@@ -195,9 +195,9 @@ class inquestlabs_api:
                 attempt += 1
 
             # retries exhausted.
-            if attempt == self.retries:
+            if attempt == self.num_retries:
                 message = "exceeded %s attempts to communicate with InQuest Labs API endpoint %s."
-                message %= self.retries, endpoint
+                message %= self.num_retries, endpoint
                 raise inquestlabs_exception(message)
 
         # all good.
