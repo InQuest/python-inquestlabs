@@ -1,35 +1,26 @@
-test_output="""
-{
-  "data": {
-    "abuse.ch": "https://abuse.ch",
-    "alienvault": "https://www.alienvault.com/open-threat-exchange",
-    "bambenek": "http://osint.bambenekconsulting.com/feeds/",
-    "binarydefense": "https://www.binarydefense.com",
-    "blocklist": "http://lists.blocklist.de",
-    "botscout": "http://botscout.com",
-    "bruteforceblocker": "http://danger.rulez.sk/index.php/bruteforceblocker/",
-    "ciarmy": "https://www.iblocklist.com",
-    "cleantalk": "https://cleantalk.org",
-    "csirtg": "https://csirtg.io",
-    "cybercrime-tracker": "http://cybercrime-tracker.net",
-    "cybersweat": "http://cybersweat.shop",
-    "dataplane": "https://dataplane.org",
-    "fedotracker": "https://abuse.ch",
-    "greensnow": "https://greensnow.co",
-    "isc.sans": "https://isc.sans.edu",
-    "myip": "https://www.myip.ms",
-    "openphish": "https://openphish.com",
-    "packetmail": "https://www.packetmail.net",
-    "phishtank": "http://data.phishtank.com",
-    "spamhaus": "https://www.spamhaus.org",
-    "sslbl": "https://abuse.ch",
-    "stopforumspam": "https://stopforumspam.com",
-    "talos": "https://www.talosintelligence.com",
-    "threatweb": "https://www.threatweb.com",
-    "urlhaus": "https://abuse.ch",
-    "viriback": "http://tracker.viriback.com",
-    "vxvault": "http://vxvault.net"
-  },
-  "success": true
-}
-"""
+import pytest
+import sys, os
+import json
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+
+from inquestlabs import inquestlabs_api
+from inquestlabs import inquestlabs_exception
+
+@pytest.fixture
+def labs():
+    labs = inquestlabs_api()
+    return labs
+
+@pytest.fixture
+def labs_with_key():
+    labs_api = inquestlabs_api(api_key="mock")
+    return labs_api
+
+
+def test_repdb_sources(labs):
+    repdb_sources= labs.repdb_sources()
+    assert len(repdb_sources) > 0
+
+def test_repdb_sources_with_key(labs_with_key):
+    repdb_sources= labs_with_key.repdb_sources()
+    assert len(repdb_sources) > 0
