@@ -1,6 +1,5 @@
 import pytest
 import sys, os
-import json
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from inquestlabs import inquestlabs_api

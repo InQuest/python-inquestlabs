@@ -111,8 +111,6 @@ def test_dfi_filter_by_none(labs,mocker,mock_attribs):
     attributes = labs.dfi_attributes("mock")
     assert len(attributes) == 11
 
-
-
 def test_dfi_filter_invalid_with_key(labs_with_key):
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs_with_key.dfi_attributes("mock",filter_by="invalid")
