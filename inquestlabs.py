@@ -225,7 +225,7 @@ class inquestlabs_api:
         endpoint = self.base_url + api
         attempt  = 0
 
-        self.__VERBOSE("%s %s" % (method, api), INFO)
+        self.__VERBOSE("%s %s" % (method, endpoint), INFO)
 
         while 1:
             try:
