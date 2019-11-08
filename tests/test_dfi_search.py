@@ -1,6 +1,6 @@
 import pytest
 from inquestlabs import inquestlabs_exception
-
+import json
 
 @pytest.fixture
 def mock_response():
