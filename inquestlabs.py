@@ -408,6 +408,34 @@ class inquestlabs_api:
         Retrieve details for a given file by SHA256 hash value. Optionally, pull attributes in a second API request
         and append to the data dictionary under the key 'attributes'.
 
+        Returned dictionary keys and value types include::
+            analysis_completed: bool
+            classification: MALICIOUS|BENIGN
+            ext_code: str
+            ext_context: str
+            ext_metadata: str
+            ext_ocr: str
+            file_type: CAB|DOC|DOCX|EML|MSI|OLE|PCAP|PPT|TNEF|XLS
+            first_seen: str ex: Thu, 07 Nov 2019 21:26:53 GMT
+            inquest_alerts: dict keys=category,description,reference,title
+            inquest_dfi_size: int
+            last_inquest_dfi: str
+            last_inquest_featext: str
+            last_updated: str
+            len_code: int
+            len_context: int
+            len_metadata: int
+            len_ocr: int
+            md5: str
+            mime_type: str
+            sha1: str
+            sha256: str
+            sha512: str
+            size: int
+            subcategory: str
+            subcategory_url: str
+            virus_total: str
+
         :type  sha256:     str
         :param sha256:     SHA256 hash for the file we are interested in.
         :type  attributes: bool
@@ -454,7 +482,23 @@ class inquestlabs_api:
     ####################################################################################################################
     def dfi_list (self):
         """
-        Retrieve the most recent DFI entries.
+        Retrieve the most recent DFI entries. Example dictionary returned in list::
+
+            {'analysis_completed': True,
+             'classification': 'MALICIOUS',
+             'file_type': 'DOC',
+             'first_seen': 'Thu, 07 Nov 2019 21:26:53 GMT',
+             'inquest_alerts': [],
+             'last_inquest_featext': 'Thu, 07 Nov 2019 21:30:23 GMT',
+             'len_code': 10963,
+             'len_context': 24,
+             'len_metadata': 1021,
+             'len_ocr': 0,
+             'mime_type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+             'sha256': 'f7702e873c1a26e8171d771180108a9735cb5a2b69958e14b51eb572973cfb7b',
+             'size': 821038,
+             'subcategory': 'macro_hunter',
+             'subcategory_url': 'https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/macro_hunter.rule'}
 
         :rtype:  list
         :return: List of dictionaries.
@@ -470,6 +514,24 @@ class inquestlabs_api:
         and 'sha512'. ioc: 'domain', 'email', 'filename', 'ip', 'url', 'xmpid'. See https://labs.inquest.net for more
         information.
 
+        Example dictionary returned in list of matched entries::
+
+            {'analysis_completed': True,
+             'classification': 'MALICIOUS',
+             'file_type': 'DOC',
+             'first_seen': 'Thu, 07 Nov 2019 21:26:53 GMT',
+             'inquest_alerts': [],
+             'last_inquest_featext': 'Thu, 07 Nov 2019 21:30:23 GMT',
+             'len_code': 10963,
+             'len_context': 24,
+             'len_metadata': 1021,
+             'len_ocr': 0,
+             'mime_type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+             'sha256': 'f7702e873c1a26e8171d771180108a9735cb5a2b69958e14b51eb572973cfb7b',
+             'size': 821038,
+             'subcategory': 'macro_hunter',
+             'subcategory_url': 'https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/macro_hunter.rule'}
+
         :type  category:    str
         :param category:    Search category, one of 'ext', 'hash', or 'ioc'.
         :type  subcategory: str
@@ -477,7 +539,7 @@ class inquestlabs_api:
         :type  keyword:     str
         :param keyword:     Keyword, hash, or IOC to search for.
 
-        :rtype:  dict
+        :rtype:  list
         :return: API response.
         """
 
