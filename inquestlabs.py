@@ -31,9 +31,7 @@ Options:
     --debug             Docopt debugging.
     -h --help           Show this screen.
     --hex               Treat <instring> as hex bytes.
-    -l --limits         Show remaining API credits and limit reset window.
     --proxy=<proxy>     Intermediate proxy
-    --verbose=<level>   Verbosity level, outputs to stderr [default: 0].
     --version           Show version.
 """
 
@@ -54,7 +52,6 @@ import hashlib
 import random
 import time
 import json
-import sys
 import os
 import re
 
@@ -64,10 +61,6 @@ VALID_CAT  = ["ext", "hash", "ioc"]
 VALID_EXT  = ["code", "context", "metadata", "ocr"]
 VALID_HASH = ["md5", "sha1", "sha256", "sha512"]
 VALID_IOC  = ["domain", "email", "filename", "ip", "url", "xmpid"]
-
-# verbosity levels.
-INFO  = 1
-DEBUG = 2
 
 ########################################################################################################################
 class inquestlabs_exception(Exception):
@@ -81,7 +74,7 @@ class inquestlabs_api:
     """
 
     ####################################################################################################################
-    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True, verbose=0):
+    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True):
         """
         Instantiate an interface to InQuest Labs. API key is optional but sourced from (in order): argument, environment
         variable, or configuration file. Proxy dictionary is a raw pass thru to python-requests, valid keys are 'http'
@@ -99,25 +92,14 @@ class inquestlabs_api:
         :param retries:    Number of times to attempt API request before giving up.
         :type  verify_ssl: bool
         :param verify_ssl: Toggles SSL certificate verification when communicating with the API.
-        :type  verbose:    int
-        :param verbose:    Values greater than zero provide increased verbosity.
         """
 
-        # internalize supplied parameters.
         self.api_key     = api_key
         self.base_url    = base_url
         self.config_file = config
         self.num_retries = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
-        self.verbosity   = verbose
-
-        # internal rate limit tracking.
-        self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
-        self.rlimit_reset_epoch_time   = None   # time, in seconds from epoch, that rate limit window resets.
-        self.rlimit_reset_epoch_ctime  = None   # same as above, but in ctime human readable format.
-        self.rlimit_seconds_to_reset   = None   # seconds to reset time.
-        self.api_requests_made         = 0      # keep track of how many API requests we've made.
 
         # internal rate limit tracking.
         self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
@@ -129,7 +111,6 @@ class inquestlabs_api:
         # if no base URL was specified, use the default.
         if self.base_url is None:
             self.base_url = "https://labs.inquest.net/api"
-            self.__VERBOSE("base_url=%s" % self.base_url, DEBUG)
 
         # if no config file was supplied, use a default path of ~/.iqlabskey.
         if self.config_file is None:
@@ -159,8 +140,6 @@ class inquestlabs_api:
                     raise inquestlabs_exception("unable to find inquestlabs.apikey in: %s" % self.config_file)
 
             # NOTE: if we still don't have an API key that's fine! InQuest Labs will simply work with some rate limits.
-            self.__VERBOSE("api_key=%s" % self.api_key, DEBUG)
-            self.__VERBOSE("api_key_source=%s" % self.api_key_source, INFO)
 
     ####################################################################################################################
     def API (self, api, data=None, path=None, method="GET", raw=False):
@@ -218,13 +197,9 @@ class inquestlabs_api:
         while 1:
             try:
                 response = requests.request(method, endpoint, **kwargs)
-                self.api_requests_made += 1
-                self.__VERBOSE("[%d] %s" % (self.api_requests_made, kwargs), DEBUG)
                 break
 
-            except Exception as e:
-                self.__VERBOSE("API exception: %s" % e, INFO)
-
+            except:
                 # 0.4, 1.6, 6.4, 25.6, ...
                 time.sleep(random.uniform(0, 4 ** attempt * 100 / 1000.0))
                 attempt += 1
@@ -234,22 +209,6 @@ class inquestlabs_api:
                 message = "exceeded %s attempts to communicate with InQuest Labs API endpoint %s."
                 message %= self.num_retries, endpoint
                 raise inquestlabs_exception(message)
-
-        # update internal rate limit tracking variables.
-        if hasattr(response, "headers"):
-            self.rlimit_requests_remaining = response.headers.get('X-RateLimit-Remaining')
-            self.rlimit_reset_epoch_time   = response.headers.get('X-RateLimit-Reset')
-
-            if self.rlimit_requests_remaining:
-                self.rlimit_requests_remaining = int(self.rlimit_requests_remaining)
-
-            if self.rlimit_reset_epoch_time:
-                self.rlimit_reset_epoch_time  = int(self.rlimit_reset_epoch_time)
-                self.rlimit_seconds_to_reset  = int(self.rlimit_reset_epoch_time - time.time())
-                self.rlimit_reset_epoch_ctime = time.ctime(self.rlimit_reset_epoch_time)
-
-        self.__VERBOSE("API status_code=%d" % response.status_code, INFO)
-        self.__VERBOSE(response.content, DEBUG)
 
         # all good.
         if response.status_code == 200:
@@ -271,16 +230,14 @@ class inquestlabs_api:
                 message %= endpoint, response_json.get("error", "n/a")
                 raise inquestlabs_exception(message)
 
-        # rate limit exhaustion.
-        elif response.status_code == 429:
-            raise inquestlabs_exception("status=429 rate limit exhausted!")
-
-        # something else went wrong.
+        # something went wrong.
         else:
             response_json = response.json()
             message  = "status=%d error communicating with %s: %s"
             message %= response.status_code, endpoint, response_json.get("error", "n/a")
             raise inquestlabs_exception(message)
+
+            # TODO add rate limit tracking and exhaustion check.
 
     ####################################################################################################################
     def HASH (self, path=None, bytes=None, algorithm="md5", block_size=16384, fmt="digest"):
@@ -906,7 +863,7 @@ def main ():
         return
 
     # instantiate interface to InQuest Labs.
-    labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'], verbose=int(args['--verbose']))
+    labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'])
 
     ### DFI ############################################################################################################
     if args['dfi']:
@@ -1071,10 +1028,6 @@ def main ():
     # huh?
     else:
         raise inquestlabs_exception("argument parsing fail.")
-
-    ### WRAP UP ########################################################################################################
-    if args['--limits']:
-        sys.stderr.write(labs.rate_limit_banner() + "\n")
 
 ########################################################################################################################
 if __name__ == '__main__':
