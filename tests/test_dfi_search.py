@@ -1,10 +1,10 @@
 import pytest
-import json
 from inquestlabs import inquestlabs_exception
+
 
 @pytest.fixture
 def mock_response():
-  response="""{
+    response = """{
   "data": [
     {
       "analysis_completed": true,
@@ -57,57 +57,67 @@ def mock_response():
       "subcategory": "macro_hunter",
       "subcategory_url": "https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/macro_hunter.rule"
     }],"success": true}"""
-  return json.loads(response)
+    return json.loads(response)
+
 
 def test_invalid_category(labs, mocker):
     with pytest.raises(inquestlabs_exception) as excinfo:
-        labs.dfi_search("BAD_CATEGORY","code", "mock_keyword")
-    
+        labs.dfi_search("BAD_CATEGORY", "code", "mock_keyword")
+
     assert "invalid category" in str(excinfo.value)
+
 
 def test_invalid_subcategory(labs, mocker):
     with pytest.raises(inquestlabs_exception) as excinfo:
-        labs.dfi_search("hash","BAD_CATEGORY", "mock_keyword")
+        labs.dfi_search("hash", "BAD_CATEGORY", "mock_keyword")
     assert "invalid subcategory" in str(excinfo.value)
 
-def test_valid_ext(labs,mocker,mock_response):
-  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
-  results= labs.dfi_search("ext","metadata","mock")
-  assert len(results["data"]) == 3
 
-def test_valid_hash(labs,mocker,mock_response):
-  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
-  results= labs.dfi_search("hash","md5","mock")
-  assert len(results["data"]) == 3
+def test_valid_ext(labs, mocker, mock_response):
+    mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+    results = labs.dfi_search("ext", "metadata", "mock")
+    assert len(results["data"]) == 3
 
-def test_valid_other(labs,mocker,mock_response):
-  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
-  results= labs.dfi_search("ioc","domain","mock")
-  assert len(results["data"]) == 3
+
+def test_valid_hash(labs, mocker, mock_response):
+    mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+    results = labs.dfi_search("hash", "md5", "mock")
+    assert len(results["data"]) == 3
+
+
+def test_valid_other(labs, mocker, mock_response):
+    mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+    results = labs.dfi_search("ioc", "domain", "mock")
+    assert len(results["data"]) == 3
+
 
 def test_invalid_category_with_key(labs_with_key, mocker):
     with pytest.raises(inquestlabs_exception) as excinfo:
-        labs_with_key.dfi_search("BAD_CATEGORY","code", "mock_keyword")
-    
+        labs_with_key.dfi_search("BAD_CATEGORY", "code", "mock_keyword")
+
     assert "invalid category" in str(excinfo.value)
+
 
 def test_invalid_subcategory_with_key(labs_with_key, mocker):
     with pytest.raises(inquestlabs_exception) as excinfo:
-        labs_with_key.dfi_search("hash","BAD_CATEGORY", "mock_keyword")
-    
+        labs_with_key.dfi_search("hash", "BAD_CATEGORY", "mock_keyword")
+
     assert "invalid subcategory" in str(excinfo.value)
 
-def test_valid_ext_with_key(labs_with_key,mocker,mock_response):
-  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
-  results= labs_with_key.dfi_search("ext","metadata","mock")
-  assert len(results["data"]) == 3
 
-def test_valid_hash_with_key(labs_with_key,mocker,mock_response):
-  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
-  results= labs_with_key.dfi_search("hash","md5","mock")
-  assert len(results["data"]) == 3
+def test_valid_ext_with_key(labs_with_key, mocker, mock_response):
+    mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+    results = labs_with_key.dfi_search("ext", "metadata", "mock")
+    assert len(results["data"]) == 3
 
-def test_valid_other_with_key(labs_with_key,mocker,mock_response):
-  mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
-  results= labs_with_key.dfi_search("ioc","domain","mock")
-  assert len(results["data"]) == 3
+
+def test_valid_hash_with_key(labs_with_key, mocker, mock_response):
+    mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+    results = labs_with_key.dfi_search("hash", "md5", "mock")
+    assert len(results["data"]) == 3
+
+
+def test_valid_other_with_key(labs_with_key, mocker, mock_response):
+    mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_response)
+    results = labs_with_key.dfi_search("ioc", "domain", "mock")
+    assert len(results["data"]) == 3
