@@ -230,7 +230,7 @@ class inquestlabs_api:
             # TODO add rate limit tracking and exhaustion check.
 
     ####################################################################################################################
-    def __HASH (self, path=None, bytes=None, algorithm="md5", block_size=16384, fmt="digest"):
+    def HASH (self, path=None, bytes=None, algorithm="md5", block_size=16384, fmt="digest"):
         """
         Return the selected algorithms crytographic hash hex digest of the given file.
 
@@ -291,10 +291,10 @@ class inquestlabs_api:
 
     ####################################################################################################################
     # hash shorcuts.
-    def md5    (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="md5")
-    def sha1   (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha1")
-    def sha256 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha256")
-    def sha512 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha512")
+    def md5    (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="md5")
+    def sha1   (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="sha1")
+    def sha256 (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="sha256")
+    def sha512 (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="sha512")
 
     ####################################################################################################################
     def dfi_attributes (self, sha256, filter_by=None):
