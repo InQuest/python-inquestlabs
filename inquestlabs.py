@@ -480,7 +480,7 @@ class inquestlabs_api:
             fh.write(data)
 
     ####################################################################################################################
-    def dfi_list (self):
+    def dfi_list (self, malicious=None, kind=None, has_code=None, has_context=None, has_metadata=None, has_ocr=None):
         """
         Retrieve the most recent DFI entries. Example dictionary returned in list::
 
@@ -499,6 +499,19 @@ class inquestlabs_api:
              'size': 821038,
              'subcategory': 'macro_hunter',
              'subcategory_url': 'https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/macro_hunter.rule'}
+
+        :type  malicious:    bool
+        :param malicious:    Filter results by whether or not they are malicious.
+        :type  kind:         str
+        :param kind:         Filter list by high level type, ex: 'DOC', 'DOCX', 'OLE', 'PPT', 'XLS'.
+        :type  has_code:     int
+        :param has_code:     Filter results by whether or not they contain X bytes of embedded logic.
+        :type  has_context:  int
+        :param has_context:  Filter results by whether or not they contain X bytes of semantic information.
+        :type  has_metadata: int
+        :param has_metadata: Filter results by whether or not they contain X bytes of any metadata.
+        :type  has_ocr:      int
+        :param has_ocr:      Filter results by whether or not they contain X bytes of OCR extracted semantic data.
 
         :rtype:  list
         :return: List of dictionaries.
@@ -612,9 +625,24 @@ class inquestlabs_api:
         return self.API("/dfi/upload", method="POST", path=path)
 
     ####################################################################################################################
-    def iocdb_list (self):
+    def iocdb_list (self, kind=None, ref_link_keyword=None, ref_text_keyword=None):
         """
-        Retrieve a list of the most recent entries added to the InQuest Labs IOC database.
+        Retrieve a list of the most recent entries added to the InQuest Labs IOC database. Example data::
+
+            {
+              "artifact": "85b936960fbe5100c170b777e1647ce9f0f01e3ab9742dfc23f37cb0825b30b5",
+              "artifact_type": "hash",
+              "created_date": "Thu, 14 Nov 2019 19:14:55 GMT",
+              "reference_link": "http://feedproxy.google.com/~r/feedburner/Talos/~3/cWpezcI4rFw/threat-source-newsletter-nov-14-2019.html",
+              "reference_text": "Newsletter compiled by Jon Munshaw. Welcome to this week’s Threat Source newsletter — the perfect place to get caught up on all things Talos..."
+            }
+
+        :type  kind:             str
+        :param kind:             Filter results by data type, can be one of 'ip', 'url', 'domain', 'yara', 'hash'.
+        :type  ref_link_keyword: str
+        :param ref_link_keyword: Filter results by keyword in reference link.
+        :type  ref_text_keyword: str
+        :param ref_text_keyword: Filter results by keyword in reference text.
 
         :rtype:  dict
         :return: API response.
@@ -670,9 +698,24 @@ class inquestlabs_api:
         return limit_banner
 
     ####################################################################################################################
-    def repdb_list (self):
+    def repdb_list (self, kind=None, source=None):
         """
-        Retrieve a list of the most recent entries added to the InQuest Labs reputation database.
+        Retrieve a list of the most recent entries added to the InQuest Labs reputation database. Example data::
+
+            {
+              "created_date": "Thu, 14 Nov 2019 18:22:00 GMT",
+              "data": "beautyevent.ru/Invoice-for-j/b-03/05/2018/",
+              "data_type": "url",
+              "derived": "beautyevent.ru",
+              "derived_type": "domain",
+              "source": "urlhaus",
+              "source_url": "https://urlhaus.abuse.ch/host/beautyevent.ru"
+            }
+
+        :type  kind:   str
+        :param kind:   Filter results by data type, can be one of 'ip', 'url', 'domain', 'asn'.
+        :type  source: str
+        :param source: Filter results by source, examples include: 'alienvault', 'blocklist', 'urlhaus', etc..
 
         :rtype:  dict
         :return: API response.
