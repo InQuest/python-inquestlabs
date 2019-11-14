@@ -500,7 +500,7 @@ class inquestlabs_api:
             fh.write(data)
 
     ####################################################################################################################
-    def dfi_list (self):
+    def dfi_list (self, malicious=None, kind=None, has_code=None, has_context=None, has_metadata=None, has_ocr=None):
         """
         Retrieve the most recent DFI entries. Example dictionary returned in list::
 
@@ -520,11 +520,53 @@ class inquestlabs_api:
              'subcategory': 'macro_hunter',
              'subcategory_url': 'https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/macro_hunter.rule'}
 
+        :type  malicious:    bool
+        :param malicious:    Filter results by whether or not they are malicious.
+        :type  kind:         str
+        :param kind:         Filter list by high level type, ex: 'DOC', 'DOCX', 'OLE', 'PPT', 'XLS'.
+        :type  has_code:     int
+        :param has_code:     Filter results by whether or not they contain X bytes of embedded logic.
+        :type  has_context:  int
+        :param has_context:  Filter results by whether or not they contain X bytes of semantic information.
+        :type  has_metadata: int
+        :param has_metadata: Filter results by whether or not they contain X bytes of any metadata.
+        :type  has_ocr:      int
+        :param has_ocr:      Filter results by whether or not they contain X bytes of OCR extracted semantic data.
+
         :rtype:  list
         :return: List of dictionaries.
         """
 
-        return self.__API("/dfi/list")
+        filtered = []
+
+        for entry in self.__API("/dfi/list"):
+
+            # process filters as disqualifiers.
+            if malicious == True and entry['classification'] != "MALICIOUS":
+                continue
+
+            if malicious == False and entry['classification'] != "UNKNOWN":
+                continue
+
+            if kind is not None and entry['file_type'] != kind:
+                continue
+
+            if has_code is not None and entry['len_code'] < has_code:
+                continue
+
+            if has_context is not None and entry['len_context'] < has_context:
+                continue
+
+            if has_metadata is not None and entry['len_metadata'] < has_metadata:
+                continue
+
+            if has_ocr is not None and entry['len_ocr'] < has_ocr:
+                continue
+
+            # if we're still here, we keep the entry.
+            filtered.append(entry)
+
+        return filtered
 
     ####################################################################################################################
     def dfi_search (self, category, subcategory, keyword):
@@ -632,15 +674,47 @@ class inquestlabs_api:
         return self.__API("/dfi/upload", method="POST", path=path)
 
     ####################################################################################################################
-    def iocdb_list (self):
+    def iocdb_list (self, kind=None, ref_link_keyword=None, ref_text_keyword=None):
         """
-        Retrieve a list of the most recent entries added to the InQuest Labs IOC database.
+        Retrieve a list of the most recent entries added to the InQuest Labs IOC database. Example data::
+
+            {
+              "artifact": "85b936960fbe5100c170b777e1647ce9f0f01e3ab9742dfc23f37cb0825b30b5",
+              "artifact_type": "hash",
+              "created_date": "Thu, 14 Nov 2019 19:14:55 GMT",
+              "reference_link": "http://feedproxy.google.com/~r/feedburner/Talos/~3/cWpezcI4rFw/threat-source-newsletter-nov-14-2019.html",
+              "reference_text": "Newsletter compiled by Jon Munshaw. Welcome to this week’s Threat Source newsletter — the perfect place to get caught up on all things Talos..."
+            }
+
+        :type  kind:             str
+        :param kind:             Filter results by data type, can be one of 'ip', 'url', 'domain', 'yara', 'hash'.
+        :type  ref_link_keyword: str
+        :param ref_link_keyword: Filter results by keyword in reference link.
+        :type  ref_text_keyword: str
+        :param ref_text_keyword: Filter results by keyword in reference text.
 
         :rtype:  dict
         :return: API response.
         """
 
-        return self.__API("/iocdb/list")
+        filtered = []
+
+        for entry in self.__API("/iocdb/list"):
+
+            # process filters as disqualifiers.
+            if kind is not None and not entry['artifact_type'].startswith(kind.lower()):
+                continue
+
+            if ref_link_keyword is not None and ref_link_keyword not in entry['reference_link'].lower():
+                continue
+
+            if ref_text_keyword is not None and ref_text_keyword not in entry['reference_text'].lower():
+                continue
+
+            # if we're still here, we keep the entry.
+            filtered.append(entry)
+
+        return filtered
 
     ####################################################################################################################
     def iocdb_search (self, keyword):
@@ -690,15 +764,44 @@ class inquestlabs_api:
         return limit_banner
 
     ####################################################################################################################
-    def repdb_list (self):
+    def repdb_list (self, kind=None, source=None):
         """
-        Retrieve a list of the most recent entries added to the InQuest Labs reputation database.
+        Retrieve a list of the most recent entries added to the InQuest Labs reputation database. Example data::
+
+            {
+              "created_date": "Thu, 14 Nov 2019 18:22:00 GMT",
+              "data": "beautyevent.ru/Invoice-for-j/b-03/05/2018/",
+              "data_type": "url",
+              "derived": "beautyevent.ru",
+              "derived_type": "domain",
+              "source": "urlhaus",
+              "source_url": "https://urlhaus.abuse.ch/host/beautyevent.ru"
+            }
+
+        :type  kind:   str
+        :param kind:   Filter results by data type, can be one of 'ip', 'url', 'domain', 'asn'.
+        :type  source: str
+        :param source: Filter results by source, examples include: 'alienvault', 'blocklist', 'urlhaus', etc..
 
         :rtype:  dict
         :return: API response.
         """
 
-        return self.__API("/repdb/list")
+        filtered = []
+
+        for entry in self.__API("/repdb/list"):
+
+            # process filters as disqualifiers.
+            if kind is not None and not entry['data_type'].startswith(kind.lower()):
+                continue
+
+            if source is not None and not entry['source'].startswith(source.lower()):
+                continue
+
+            # if we're still here, we keep the entry.
+            filtered.append(entry)
+
+        return filtered
 
     ####################################################################################################################
     def repdb_search (self, keyword):
