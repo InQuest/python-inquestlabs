@@ -56,6 +56,7 @@ import time
 import json
 import sys
 import os
+import re
 
 __version__ = 1.0
 
@@ -355,6 +356,31 @@ class inquestlabs_api:
             return hashfunc.hexdigest()
 
     ####################################################################################################################
+    def __HASH_VALIDATE (self, hash_str, length=None):
+        """
+        Determine if the given hash string contains valid hex chars for the specified length or entirely, if left out.
+
+        :type  hash_str: str
+        :param hash_str: Hash string to verify.
+        :type  length:   int
+        :param length:   Number of characters in hash string.
+
+        :rtype:  bool
+        :return: True is hash string is valid, False otherwise.
+        """
+
+        if not hash_str:
+            return None
+
+        if length and len(hash_str) != length:
+            return False
+
+        if re.match("[0-9a-fA-F]+", hash_str, re.I):
+            return True
+
+        return False
+
+    ####################################################################################################################
     def __VERBOSE (self, message, verbosity=INFO):
         """
         Outputs 'message' to stderr if instance verbosity is equal to or greater than the supplied verbosity.
@@ -374,6 +400,11 @@ class inquestlabs_api:
     def sha1   (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha1")
     def sha256 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha256")
     def sha512 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha512")
+
+    def is_md5    (self, hash_str): return self.__HASH_VALIDATE(hash_str,  32)
+    def is_sha1   (self, hash_str): return self.__HASH_VALIDATE(hash_str,  40)
+    def is_sha256 (self, hash_str): return self.__HASH_VALIDATE(hash_str,  64)
+    def is_sha512 (self, hash_str): return self.__HASH_VALIDATE(hash_str, 128)
 
     ####################################################################################################################
     def dfi_attributes (self, sha256, filter_by=None):
@@ -465,6 +496,9 @@ class inquestlabs_api:
         :return: API response.
         """
 
+        assert self.is_sha256(sha256)
+
+        # API dance.
         data = self.__API("/dfi/details", dict(sha256=sha256))
 
         if attributes:
@@ -482,6 +516,8 @@ class inquestlabs_api:
         :type  path:   str
         :param path:   Where we want to save the file.
         """
+
+        assert self.is_sha256(sha256)
 
         # NOTE: we're reading the file directly into memory here! not worried about it as the files are small and we
         # done anticipate any OOM issues.
@@ -683,7 +719,7 @@ class inquestlabs_api:
               "artifact_type": "hash",
               "created_date": "Thu, 14 Nov 2019 19:14:55 GMT",
               "reference_link": "http://feedproxy.google.com/~r/feedburner/Talos/~3/cWpezcI4rFw/threat-source-newsletter-nov-14-2019.html",
-              "reference_text": "Newsletter compiled by Jon Munshaw. Welcome to this week’s Threat Source newsletter — the perfect place to get caught up on all things Talos..."
+              "reference_text": "Newsletter compiled by Jon Munshaw. Welcome to this week's Threat Source newsletter - the perfect place to get caught up on all things Talos..."
             }
 
         :type  kind:             str
