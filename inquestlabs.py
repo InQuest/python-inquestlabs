@@ -223,6 +223,7 @@ class inquestlabs_api:
         # something went wrong.
         else:
             response_json = response.json()
+            print(response_json)
             message  = "status=%d error communicating with %s: %s"
             message %= response.status_code, endpoint, response_json.get("error", "n/a")
             raise inquestlabs_exception(message)

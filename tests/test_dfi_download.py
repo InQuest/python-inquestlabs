@@ -1,7 +1,8 @@
 import pytest
 
 from inquestlabs import inquestlabs_exception
-
+import requests_mock
+import requests
 
 @pytest.fixture
 def mock_invalid_doc():
@@ -15,8 +16,15 @@ def mock_hash():
 def mock_hash_data():
     return bytearray('mock data inside this hash','utf-8')
 
+def mock_invalid_hash_response(*args, **kwargs):
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get("http://labs_mock.com", json={'error': "Supplied 'sha256' value is not a valid hash.", 'success': False}, status_code=400)
+        response = requests.get("http://labs_mock.com")
+        return response
 
-def test_download_invalid_sha256(labs):
+def test_download_invalid_sha256(labs,mocker):
+    mocker.patch('requests.request', side_effect=mock_invalid_hash_response)
+
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs.dfi_download("mock","fake_path")
 
@@ -31,7 +39,9 @@ def test_download_invalid_path(labs, mocker, mock_hash, mock_hash_data):
     assert "failed downloading file" in str(excinfo.value)
 
 
-def test_download_invalid_sha256_with_key(labs_with_key):
+def test_download_invalid_sha256(labs_with_key,mocker):
+    mocker.patch('requests.request', side_effect=mock_invalid_hash_response)
+
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs_with_key.dfi_download("mock","fake_path")
 

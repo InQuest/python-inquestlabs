@@ -12,6 +12,36 @@ def mocked_400_response_request(*args, **kwargs):
         response = requests.get("http://labs_mock.com")
         return response
 
+def mocked_413_response_size_exceeded(*args, **kwargs):
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get("http://labs_mock.com", json={"success":False}, status_code=413)
+        response = requests.get("http://labs_mock.com")
+        return response
+
+def mocked_500_response_generic_failure(*args, **kwargs):
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get("http://labs_mock.com", json={"success":False}, status_code=500)
+        response = requests.get("http://labs_mock.com")
+        return response
+
+def mocked_404_response_nonexistant(*args, **kwargs):
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get("http://labs_mock.com", status_code=404)
+        response = requests.get("http://labs_mock.com")
+        return response
+
+def mocked_400_response_missing_parameter(*args, **kwargs):
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get("http://labs_mock.com", json={"success":False}, status_code=400)
+        response = requests.get("http://labs_mock.com")
+        return response
+
+def mocked_429_response_ratelimit(*args, **kwargs):
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get("http://labs_mock.com", json={"success":False}, status_code=200)
+        response = requests.get("http://labs_mock.com")
+        return response
+
 def mocked_200_response_unsuccessful_request(*args, **kwargs):
     with requests_mock.Mocker() as mock_request:
         mock_request.get("http://labs_mock.com", json={"success":False}, status_code=200)
@@ -79,6 +109,13 @@ def test_api_bad_status_code(labs_with_key,mocker):
     assert "status=400" in str(excinfo.value)
 
 def test_api_unsuccessful_request(labs_with_key,mocker):
+    mocker.patch('requests.request', side_effect=mocked_200_response_unsuccessful_request)
+    with pytest.raises(inquestlabs_exception) as excinfo:
+        labs_with_key.API("mock")
+        
+    assert "status=200 but error communicating" in str(excinfo.value)
+
+def test_api_ratelimit_reached(labs_with_key,mocker):
     mocker.patch('requests.request', side_effect=mocked_200_response_unsuccessful_request)
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs_with_key.API("mock")

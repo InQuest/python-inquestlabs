@@ -38,6 +38,7 @@ def test_repdb_list(labs, mock_repdb_list,mocker):
     assert len(repdb_list) == len(mock_repdb_list)
 
 
-def test_repdb_list_with_key(labs_with_key, mock_repdb_list):
+def test_repdb_list_with_key(labs_with_key, mock_repdb_list,mocker):
+    mocker.patch("inquestlabs.inquestlabs_api.API", return_value=mock_repdb_list)
     repdb_list = labs_with_key.repdb_list()
-    assert len(repdb_list) == 1337
+    assert len(repdb_list) == len(mock_repdb_list)

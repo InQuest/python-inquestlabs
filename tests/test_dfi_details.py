@@ -1,6 +1,8 @@
 import pytest
 
 from inquestlabs import inquestlabs_exception
+import requests_mock
+import requests
 
 
 @pytest.fixture
@@ -50,8 +52,16 @@ def mock_details():
 }"""
     return mocked
 
+def mock_invalid_hash_response(*args, **kwargs):
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get("http://labs_mock.com", json={'error': "Supplied 'sha256' value is not a valid hash.", 'success': False}, status_code=400)
+        response = requests.get("http://labs_mock.com")
+        return response
 
-def test_dfi_details_invalid_hash(labs):
+
+def test_dfi_details_invalid_hash(labs, mocker):
+    mocker.patch('requests.request', side_effect=mock_invalid_hash_response)
+
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs.dfi_details("mock")
 
@@ -59,34 +69,53 @@ def test_dfi_details_invalid_hash(labs):
 
 
 def test_dfi_details(labs, mocker):
+    mocker.patch('inquestlabs.inquestlabs_api.API',
+	 return_value={"sha256":"30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"})
+
     details = labs.dfi_details(
         "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c")
+
     assert details["sha256"] == "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"
 
 
 def test_dfi_details_with_attributes(labs, mocker):
+    mocker.patch('inquestlabs.inquestlabs_api.API',
+	 return_value={"sha256":"30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c", "attribrutes":["test"]})
+
     details = labs.dfi_details(
         "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c", attributes=True)
     assert details["sha256"] == "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"
     assert "attributes" in details.keys()
 
 
-def test_dfi_details_invalid_hash(labs_with_key):
+
+def test_dfi_details_invalid_hash_with_key(labs_with_key, mocker):
+    mocker.patch('requests.request', side_effect=mock_invalid_hash_response)
+
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs_with_key.dfi_details("mock")
 
     assert "value is not a valid hash" in str(excinfo.value)
 
 
+
 def test_dfi_details_with_key(labs_with_key, mocker):
+    mocker.patch('inquestlabs.inquestlabs_api.API',
+	 return_value={"sha256":"30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"})
+
     details = labs_with_key.dfi_details(
         "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c")
+
     assert details["sha256"] == "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"
 
 
-def test_dfi_details_with_attributes(labs_with_key, mocker):
+
+def test_dfi_details_with_attributes_with_key(labs_with_key, mocker):
+    mocker.patch('inquestlabs.inquestlabs_api.API',
+	 return_value={"sha256":"30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c", "attribrutes":["test"]})
+
     details = labs_with_key.dfi_details(
         "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c", attributes=True)
     assert details["sha256"] == "30c53168deee9046d41d3e602e0e598c2cf0880fed1a34b957f5f3bd9361b52c"
-
     assert "attributes" in details.keys()
+
