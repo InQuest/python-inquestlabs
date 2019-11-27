@@ -31,7 +31,9 @@ Options:
     --debug             Docopt debugging.
     -h --help           Show this screen.
     --hex               Treat <instring> as hex bytes.
+    -l --limits         Show remaining API credits and limit reset window.
     --proxy=<proxy>     Intermediate proxy
+    --verbose=<level>   Verbosity level, outputs to stderr [default: 0].
     --version           Show version.
 """
 
@@ -52,6 +54,7 @@ import hashlib
 import random
 import time
 import json
+import sys
 import os
 import re
 
@@ -61,6 +64,10 @@ VALID_CAT  = ["ext", "hash", "ioc"]
 VALID_EXT  = ["code", "context", "metadata", "ocr"]
 VALID_HASH = ["md5", "sha1", "sha256", "sha512"]
 VALID_IOC  = ["domain", "email", "filename", "ip", "url", "xmpid"]
+
+# verbosity levels.
+INFO  = 1
+DEBUG = 2
 
 ########################################################################################################################
 class inquestlabs_exception(Exception):
@@ -74,7 +81,7 @@ class inquestlabs_api:
     """
 
     ####################################################################################################################
-    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True):
+    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True, verbose=0):
         """
         Instantiate an interface to InQuest Labs. API key is optional but sourced from (in order): argument, environment
         variable, or configuration file. Proxy dictionary is a raw pass thru to python-requests, valid keys are 'http'
@@ -92,14 +99,18 @@ class inquestlabs_api:
         :param retries:    Number of times to attempt API request before giving up.
         :type  verify_ssl: bool
         :param verify_ssl: Toggles SSL certificate verification when communicating with the API.
+        :type  verbose:    int
+        :param verbose:    Values greater than zero provide increased verbosity.
         """
 
+        # internalize supplied parameters.
         self.api_key     = api_key
         self.base_url    = base_url
         self.config_file = config
         self.num_retries = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
+        self.verbosity   = verbose
 
         # internal rate limit tracking.
         self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
@@ -111,38 +122,61 @@ class inquestlabs_api:
         # if no base URL was specified, use the default.
         if self.base_url is None:
             self.base_url = "https://labs.inquest.net/api"
+            self.__VERBOSE("base_url=%s" % self.base_url, DEBUG)
 
         # if no config file was supplied, use a default path of ~/.iqlabskey.
         if self.config_file is None:
             self.config_file = os.path.join(os.path.expanduser("~"), ".iqlabskey")
 
-        # if no API key was specified...
-        if not self.api_key:
+        elif "~" in self.config_file:
+            self.config_file = os.path.expanduser(self.config_file)
+
+        self.__VERBOSE("config_file=%s" % self.config_file, DEBUG)
+
+        # if an API key was specified, note the source.
+        if self.api_key:
+            self.api_key_source = "supplied"
+
+        # otherwise, we don't have an API source yet, we'll check the environement and config files though.
+        else:
+            self.api_key_source = "N/A"
 
             # check the environment for one
             self.api_key = os.environ.get("IQLABS_APIKEY")
 
-            # if we still don't have an API key, try loading one from the config file. format:
-            #   $ cat .iqlabskey
-            #   [inquestlabs]
-            #   apikey: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef
-            if not self.api_key and os.path.exists(self.config_file) and os.path.isfile(self.config_file):
-                config = configparser.ConfigParser()
+            if self.api_key:
+                self.api_key_source = "environment"
 
-                try:
-                    config.read(self.config_file)
-                except:
-                    raise inquestlabs_exception("invalid configuration file: %s" % self.config_file)
+            # if we still don't have an API key, try loading one from the config file.
+            else:
 
-                try:
-                    self.api_key = config.get("inquestlabs", "apikey")
-                except:
-                    raise inquestlabs_exception("unable to find inquestlabs.apikey in: %s" % self.config_file)
+                # config file format:
+                #   $ cat .iqlabskey
+                #   [inquestlabs]
+                #   apikey: deadbeefdeadbeefdeadbeefdeadbeefdeadbeef
+                if os.path.exists(self.config_file) and os.path.isfile(self.config_file):
+
+                    config = configparser.ConfigParser()
+
+                    try:
+                        config.read(self.config_file)
+                    except:
+                        raise inquestlabs_exception("invalid configuration file: %s" % self.config_file)
+
+                    try:
+                        self.api_key = config.get("inquestlabs", "apikey")
+                    except:
+                        raise inquestlabs_exception("unable to find inquestlabs.apikey in: %s" % self.config_file)
+
+                    # update the source, include the path.
+                    self.api_key_source = "config: %s" % self.config_file
 
             # NOTE: if we still don't have an API key that's fine! InQuest Labs will simply work with some rate limits.
+            self.__VERBOSE("api_key=%s" % self.api_key, DEBUG)
+            self.__VERBOSE("api_key_source=%s" % self.api_key_source, INFO)
 
     ####################################################################################################################
-    def API (self, api, data=None, path=None, method="GET", raw=False):
+    def __API (self, api, data=None, path=None, method="GET", raw=False):
         """
         Internal API wrapper.
 
@@ -192,23 +226,43 @@ class inquestlabs_api:
         endpoint = self.base_url + api
         attempt  = 0
 
-        self.__VERBOSE("%s %s" % (method, api), INFO)
+        self.__VERBOSE("%s %s" % (method, endpoint), INFO)
 
         while 1:
             try:
                 response = requests.request(method, endpoint, **kwargs)
+                self.api_requests_made += 1
+                self.__VERBOSE("[%d] %s" % (self.api_requests_made, kwargs), DEBUG)
                 break
 
-            except:
+            except Exception as e:
+                self.__VERBOSE("API exception: %s" % e, INFO)
+
                 # 0.4, 1.6, 6.4, 25.6, ...
                 time.sleep(random.uniform(0, 4 ** attempt * 100 / 1000.0))
                 attempt += 1
 
             # retries exhausted.
-            if attempt == self.num_retries:
+            if attempt == self.retries:
                 message = "exceeded %s attempts to communicate with InQuest Labs API endpoint %s."
-                message %= self.num_retries, endpoint
+                message %= self.retries, endpoint
                 raise inquestlabs_exception(message)
+
+        # update internal rate limit tracking variables.
+        if hasattr(response, "headers"):
+            self.rlimit_requests_remaining = response.headers.get('X-RateLimit-Remaining')
+            self.rlimit_reset_epoch_time   = response.headers.get('X-RateLimit-Reset')
+
+            if self.rlimit_requests_remaining:
+                self.rlimit_requests_remaining = int(self.rlimit_requests_remaining)
+
+            if self.rlimit_reset_epoch_time:
+                self.rlimit_reset_epoch_time  = int(self.rlimit_reset_epoch_time)
+                self.rlimit_seconds_to_reset  = int(self.rlimit_reset_epoch_time - time.time())
+                self.rlimit_reset_epoch_ctime = time.ctime(self.rlimit_reset_epoch_time)
+
+        self.__VERBOSE("API status_code=%d" % response.status_code, INFO)
+        self.__VERBOSE(response.content, DEBUG)
 
         # all good.
         if response.status_code == 200:
@@ -230,17 +284,19 @@ class inquestlabs_api:
                 message %= endpoint, response_json.get("error", "n/a")
                 raise inquestlabs_exception(message)
 
-        # something went wrong.
+        # rate limit exhaustion.
+        elif response.status_code == 429:
+            raise inquestlabs_exception("status=429 rate limit exhausted!")
+
+        # something else went wrong.
         else:
             response_json = response.json()
             message  = "status=%d error communicating with %s: %s"
             message %= response.status_code, endpoint, response_json.get("error", "n/a")
             raise inquestlabs_exception(message)
 
-            # TODO add rate limit tracking and exhaustion check.
-
     ####################################################################################################################
-    def HASH (self, path=None, bytes=None, algorithm="md5", block_size=16384, fmt="digest"):
+    def __HASH (self, path=None, bytes=None, algorithm="md5", block_size=16384, fmt="digest"):
         """
         Return the selected algorithms crytographic hash hex digest of the given file.
 
@@ -340,10 +396,10 @@ class inquestlabs_api:
 
     ####################################################################################################################
     # hash shorcuts.
-    def md5    (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="md5")
-    def sha1   (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="sha1")
-    def sha256 (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="sha256")
-    def sha512 (self, path=None, bytes=None): return self.HASH(path=path, bytes=bytes, algorithm="sha512")
+    def md5    (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="md5")
+    def sha1   (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha1")
+    def sha256 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha256")
+    def sha512 (self, path=None, bytes=None): return self.__HASH(path=path, bytes=bytes, algorithm="sha512")
 
     def is_md5    (self, hash_str): return self.__HASH_VALIDATE(hash_str,  32)
     def is_sha1   (self, hash_str): return self.__HASH_VALIDATE(hash_str,  40)
@@ -373,7 +429,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception(message)
 
         # dance with the API.
-        attributes = self.API("/dfi/details/attributes", dict(sha256=sha256))
+        attributes = self.__API("/dfi/details/attributes", dict(sha256=sha256))
 
         # filter if necessary.
         if filter_by:
@@ -440,7 +496,10 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        data = self.API("/dfi/details", dict(sha256=sha256))
+        assert self.is_sha256(sha256)
+
+        # API dance.
+        data = self.__API("/dfi/details", dict(sha256=sha256))
 
         if attributes:
             data['attributes'] = self.dfi_attributes(sha256)
@@ -462,7 +521,7 @@ class inquestlabs_api:
 
         # NOTE: we're reading the file directly into memory here! not worried about it as the files are small and we
         # done anticipate any OOM issues.
-        data = self.API("/dfi/download", dict(sha256=sha256), raw=True)
+        data = self.__API("/dfi/download", dict(sha256=sha256), raw=True)
 
         # ensure we got what we were looking for.
         calculated = self.sha256(bytes=data)
@@ -514,7 +573,36 @@ class inquestlabs_api:
         :return: List of dictionaries.
         """
 
-        return self.API("/dfi/list")
+        filtered = []
+
+        for entry in self.__API("/dfi/list"):
+
+            # process filters as disqualifiers.
+            if malicious == True and entry['classification'] != "MALICIOUS":
+                continue
+
+            if malicious == False and entry['classification'] != "UNKNOWN":
+                continue
+
+            if kind is not None and entry['file_type'] != kind:
+                continue
+
+            if has_code is not None and entry['len_code'] < has_code:
+                continue
+
+            if has_context is not None and entry['len_context'] < has_context:
+                continue
+
+            if has_metadata is not None and entry['len_metadata'] < has_metadata:
+                continue
+
+            if has_ocr is not None and entry['len_ocr'] < has_ocr:
+                continue
+
+            # if we're still here, we keep the entry.
+            filtered.append(entry)
+
+        return filtered
 
     ####################################################################################################################
     def dfi_search (self, category, subcategory, keyword):
@@ -578,7 +666,7 @@ class inquestlabs_api:
         else:
             data = dict(keyword=keyword)
 
-        return self.API("/dfi/search/%s/%s" % (category, subcategory), data)
+        return self.__API("/dfi/search/%s/%s" % (category, subcategory), data)
 
     ####################################################################################################################
     def dfi_sources (self):
@@ -590,7 +678,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.API("/dfi/sources")
+        return self.__API("/dfi/sources")
 
     ####################################################################################################################
     def dfi_upload (self, path):
@@ -619,7 +707,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception(message)
 
         # dance with the API.
-        return self.API("/dfi/upload", method="POST", path=path)
+        return self.__API("/dfi/upload", method="POST", path=path)
 
     ####################################################################################################################
     def iocdb_list (self, kind=None, ref_link_keyword=None, ref_text_keyword=None):
@@ -645,7 +733,24 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.API("/iocdb/list")
+        filtered = []
+
+        for entry in self.__API("/iocdb/list"):
+
+            # process filters as disqualifiers.
+            if kind is not None and not entry['artifact_type'].startswith(kind.lower()):
+                continue
+
+            if ref_link_keyword is not None and ref_link_keyword not in entry['reference_link'].lower():
+                continue
+
+            if ref_text_keyword is not None and ref_text_keyword not in entry['reference_text'].lower():
+                continue
+
+            # if we're still here, we keep the entry.
+            filtered.append(entry)
+
+        return filtered
 
     ####################################################################################################################
     def iocdb_search (self, keyword):
@@ -659,7 +764,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.API("/iocdb/search", dict(keyword=keyword))
+        return self.__API("/iocdb/search", dict(keyword=keyword))
 
     ####################################################################################################################
     def iocdb_sources (self):
@@ -670,7 +775,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.API("/iocdb/sources")
+        return self.__API("/iocdb/sources")
 
     ####################################################################################################################
     def rate_limit_banner (self):
@@ -689,8 +794,8 @@ class inquestlabs_api:
             limit_banner  = "%d API requests made. %d API requests remaining. Rate limit window resets on %s."
             limit_banner %= self.api_requests_made, self.rlimit_requests_remaining, self.rlimit_reset_epoch_ctime
         else:
-            limit_banner  = "%d API requests made. No rate limit!"
-            limit_banner %= self.api_requests_made
+            limit_banner  = "%d API requests made. No rate limit! API key sourced from %s."
+            limit_banner %= self.api_requests_made, self.api_key_source
 
         return limit_banner
 
@@ -718,7 +823,21 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.API("/repdb/list")
+        filtered = []
+
+        for entry in self.__API("/repdb/list"):
+
+            # process filters as disqualifiers.
+            if kind is not None and not entry['data_type'].startswith(kind.lower()):
+                continue
+
+            if source is not None and not entry['source'].startswith(source.lower()):
+                continue
+
+            # if we're still here, we keep the entry.
+            filtered.append(entry)
+
+        return filtered
 
     ####################################################################################################################
     def repdb_search (self, keyword):
@@ -732,7 +851,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.API("/repdb/search", dict(keyword=keyword))
+        return self.__API("/repdb/search", dict(keyword=keyword))
 
     ####################################################################################################################
     def repdb_sources (self):
@@ -743,7 +862,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.API("/repdb/sources")
+        return self.__API("/repdb/sources")
 
     ####################################################################################################################
     def stats (self):
@@ -754,7 +873,7 @@ class inquestlabs_api:
         :return: List of dictionaries.
         """
 
-        return self.API("/stats")
+        return self.__API("/stats")
 
     ####################################################################################################################
     def yara_b64re (self, regex, endian=None):
@@ -786,7 +905,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception("invalid endianess supplied to yara_b64re: %s" % endian)
 
         # dance with the API and return results.
-        return self.API("/yara/base64re", data)
+        return self.__API("/yara/base64re", data)
 
     ####################################################################################################################
     def yara_hexcase (self, instring):
@@ -800,7 +919,7 @@ class inquestlabs_api:
         :return: Mixed hex case insensitive regular expression.
         """
 
-        return self.API("/yara/mixcase", dict(instring=instring))
+        return self.__API("/yara/mixcase", dict(instring=instring))
 
     ####################################################################################################################
     def yara_widere (self, regex, endian=None):
@@ -829,7 +948,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception("invalid endianess supplied to yara_b64re: %s" % endian)
 
         # dance with the API and return results.
-        return self.API("/yara/widere", data)
+        return self.__API("/yara/widere", data)
 
     ####################################################################################################################
     def yara_uint (self, magic, offset=0, is_hex=False):
@@ -848,7 +967,7 @@ class inquestlabs_api:
         :return: YARA condition looking for magic at offset via uint() magic.
         """
 
-        return self.API("/yara/trigger", dict(trigger=magic, offset=offset, is_hex=is_hex))
+        return self.__API("/yara/trigger", dict(trigger=magic, offset=offset, is_hex=is_hex))
 
 ########################################################################################################################
 ########################################################################################################################
@@ -863,7 +982,7 @@ def main ():
         return
 
     # instantiate interface to InQuest Labs.
-    labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'])
+    labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'], verbose=int(args['--verbose']))
 
     ### DFI ############################################################################################################
     if args['dfi']:
@@ -1028,6 +1147,10 @@ def main ():
     # huh?
     else:
         raise inquestlabs_exception("argument parsing fail.")
+
+    ### WRAP UP ########################################################################################################
+    if args['--limits']:
+        sys.stderr.write(labs.rate_limit_banner() + "\n")
 
 ########################################################################################################################
 if __name__ == '__main__':

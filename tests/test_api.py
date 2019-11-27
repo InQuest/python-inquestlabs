@@ -8,7 +8,6 @@ import requests_mock
 
 def mocked_400_response_request(*args, **kwargs):
     with requests_mock.Mocker() as mock_request:
-<<<<<<< HEAD
         mock_request.get("http://labs_mock.com", json={"error":400}, status_code=400)
         response = requests.get("http://labs_mock.com")
         return response
@@ -16,16 +15,9 @@ def mocked_400_response_request(*args, **kwargs):
 def mocked_413_response_size_exceeded(*args, **kwargs):
     with requests_mock.Mocker() as mock_request:
         mock_request.get("http://labs_mock.com", json={"success":False}, status_code=413)
-||||||| parent of 22c8a3e... removed all underscores in functions
-        mock_request.get("http://labs_mock.com",
-                         json={"error": 400}, status_code=400)
-=======
-        mock_request.get("http://labs_mock.com", json={"error":400}, status_code=400)
->>>>>>> 22c8a3e... removed all underscores in functions
         response = requests.get("http://labs_mock.com")
         return response
 
-<<<<<<< HEAD
 def mocked_500_response_generic_failure(*args, **kwargs):
     with requests_mock.Mocker() as mock_request:
         mock_request.get("http://labs_mock.com", json={"success":False}, status_code=500)
@@ -33,25 +25,11 @@ def mocked_500_response_generic_failure(*args, **kwargs):
         return response
 
 def mocked_404_response_nonexistant(*args, **kwargs):
-||||||| parent of 22c8a3e... removed all underscores in functions
-
-def mocked_200_response_unsuccessful_request(*args, **kwargs):
-=======
-def mocked_200_response_unsuccessful_request(*args, **kwargs):
->>>>>>> 22c8a3e... removed all underscores in functions
     with requests_mock.Mocker() as mock_request:
-<<<<<<< HEAD
         mock_request.get("http://labs_mock.com", status_code=404)
-||||||| parent of 22c8a3e... removed all underscores in functions
-        mock_request.get("http://labs_mock.com",
-                         json={"success": False}, status_code=200)
-=======
-        mock_request.get("http://labs_mock.com", json={"success":False}, status_code=200)
->>>>>>> 22c8a3e... removed all underscores in functions
         response = requests.get("http://labs_mock.com")
         return response
 
-<<<<<<< HEAD
 def mocked_400_response_missing_parameter(*args, **kwargs):
     with requests_mock.Mocker() as mock_request:
         mock_request.get("http://labs_mock.com", json={"success":False}, status_code=400)
@@ -70,10 +48,6 @@ def mocked_200_response_unsuccessful_request(*args, **kwargs):
         response = requests.get("http://labs_mock.com")
         return response
 
-||||||| parent of 22c8a3e... removed all underscores in functions
-
-=======
->>>>>>> 22c8a3e... removed all underscores in functions
 def test_api_invalid_method(labs):
     with pytest.raises(Exception)as excinfo:
         labs.API("mock", data=None, path=None, method="INVALID", raw=False)
@@ -138,7 +112,6 @@ def test_api_unsuccessful_request(labs_with_key,mocker):
     mocker.patch('requests.request', side_effect=mocked_200_response_unsuccessful_request)
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs_with_key.API("mock")
-<<<<<<< HEAD
         
     assert "status=200 but error communicating" in str(excinfo.value)
 
@@ -147,9 +120,4 @@ def test_api_ratelimit_reached(labs_with_key,mocker):
     with pytest.raises(inquestlabs_exception) as excinfo:
         labs_with_key.API("mock")
         
-||||||| parent of 22c8a3e... removed all underscores in functions
-
-=======
-        
->>>>>>> 22c8a3e... removed all underscores in functions
     assert "status=200 but error communicating" in str(excinfo.value)
