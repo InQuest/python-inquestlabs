@@ -119,6 +119,13 @@ class inquestlabs_api:
         self.rlimit_seconds_to_reset   = None   # seconds to reset time.
         self.api_requests_made         = 0      # keep track of how many API requests we've made.
 
+        # internal rate limit tracking.
+        self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
+        self.rlimit_reset_epoch_time   = None   # time, in seconds from epoch, that rate limit window resets.
+        self.rlimit_reset_epoch_ctime  = None   # same as above, but in ctime human readable format.
+        self.rlimit_seconds_to_reset   = None   # seconds to reset time.
+        self.api_requests_made         = 0      # keep track of how many API requests we've made.
+
         # if no base URL was specified, use the default.
         if self.base_url is None:
             self.base_url = "https://labs.inquest.net/api"
