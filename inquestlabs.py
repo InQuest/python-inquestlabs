@@ -137,7 +137,7 @@ class inquestlabs_api:
         if self.api_key:
             self.api_key_source = "supplied"
 
-        # otherwise, we don't have an API source yet, we'll check the environement and config files though.
+        # otherwise, we don't have an API source yet, we'll check the environment and config files though.
         else:
             self.api_key_source = "N/A"
 
