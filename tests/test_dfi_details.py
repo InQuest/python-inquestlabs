@@ -62,10 +62,10 @@ def mock_invalid_hash_response(*args, **kwargs):
 def test_dfi_details_invalid_hash(labs, mocker):
     mocker.patch('requests.request', side_effect=mock_invalid_hash_response)
 
-    with pytest.raises(inquestlabs_exception) as excinfo:
+    with pytest.raises(AssertionError) as excinfo:
         labs.dfi_details("mock")
 
-    assert "value is not a valid hash" in str(excinfo.value)
+    assert "AssertionError" in str(excinfo)
 
 
 def test_dfi_details(labs, mocker):
@@ -92,10 +92,10 @@ def test_dfi_details_with_attributes(labs, mocker):
 def test_dfi_details_invalid_hash_with_key(labs_with_key, mocker):
     mocker.patch('requests.request', side_effect=mock_invalid_hash_response)
 
-    with pytest.raises(inquestlabs_exception) as excinfo:
+    with pytest.raises(AssertionError) as excinfo:
         labs_with_key.dfi_details("mock")
 
-    assert "value is not a valid hash" in str(excinfo.value)
+    assert "Assertion" in str(excinfo)
 
 
 
