@@ -138,6 +138,7 @@ class inquestlabs_api:
             self.api_key_source = "supplied"
 
         # otherwise, we don't have an API source yet, we'll check the environment and config files though.
+
         else:
             self.api_key_source = "N/A"
 
@@ -499,7 +500,9 @@ class inquestlabs_api:
         assert self.is_sha256(sha256)
 
         # API dance.
+
         data = self.API("/dfi/details", dict(sha256=sha256))
+
 
         if attributes:
             data['attributes'] = self.dfi_attributes(sha256)
@@ -576,6 +579,7 @@ class inquestlabs_api:
         filtered = []
 
         for entry in self.API("/dfi/list"):
+
 
             # process filters as disqualifiers.
             if malicious == True and entry['classification'] != "MALICIOUS":
@@ -735,7 +739,9 @@ class inquestlabs_api:
 
         filtered = []
 
+
         for entry in self.API("/iocdb/list"):
+
 
             # process filters as disqualifiers.
             if kind is not None and not entry['artifact_type'].startswith(kind.lower()):
