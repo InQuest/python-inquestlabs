@@ -107,7 +107,7 @@ class inquestlabs_api:
         self.api_key     = api_key
         self.base_url    = base_url
         self.config_file = config
-        self.num_retries = retries
+        self.retries = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
         self.verbosity   = verbose
@@ -137,7 +137,8 @@ class inquestlabs_api:
         if self.api_key:
             self.api_key_source = "supplied"
 
-        # otherwise, we don't have an API source yet, we'll check the environement and config files though.
+        # otherwise, we don't have an API source yet, we'll check the environment and config files though.
+
         else:
             self.api_key_source = "N/A"
 
@@ -176,7 +177,7 @@ class inquestlabs_api:
             self.__VERBOSE("api_key_source=%s" % self.api_key_source, INFO)
 
     ####################################################################################################################
-    def __API (self, api, data=None, path=None, method="GET", raw=False):
+    def API (self, api, data=None, path=None, method="GET", raw=False):
         """
         Internal API wrapper.
 
@@ -429,7 +430,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception(message)
 
         # dance with the API.
-        attributes = self.__API("/dfi/details/attributes", dict(sha256=sha256))
+        attributes = self.API("/dfi/details/attributes", dict(sha256=sha256))
 
         # filter if necessary.
         if filter_by:
@@ -499,7 +500,9 @@ class inquestlabs_api:
         assert self.is_sha256(sha256)
 
         # API dance.
-        data = self.__API("/dfi/details", dict(sha256=sha256))
+
+        data = self.API("/dfi/details", dict(sha256=sha256))
+
 
         if attributes:
             data['attributes'] = self.dfi_attributes(sha256)
@@ -521,7 +524,7 @@ class inquestlabs_api:
 
         # NOTE: we're reading the file directly into memory here! not worried about it as the files are small and we
         # done anticipate any OOM issues.
-        data = self.__API("/dfi/download", dict(sha256=sha256), raw=True)
+        data = self.API("/dfi/download", dict(sha256=sha256), raw=True)
 
         # ensure we got what we were looking for.
         calculated = self.sha256(bytes=data)
@@ -575,7 +578,8 @@ class inquestlabs_api:
 
         filtered = []
 
-        for entry in self.__API("/dfi/list"):
+        for entry in self.API("/dfi/list"):
+
 
             # process filters as disqualifiers.
             if malicious == True and entry['classification'] != "MALICIOUS":
@@ -666,7 +670,7 @@ class inquestlabs_api:
         else:
             data = dict(keyword=keyword)
 
-        return self.__API("/dfi/search/%s/%s" % (category, subcategory), data)
+        return self.API("/dfi/search/%s/%s" % (category, subcategory), data)
 
     ####################################################################################################################
     def dfi_sources (self):
@@ -678,7 +682,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.__API("/dfi/sources")
+        return self.API("/dfi/sources")
 
     ####################################################################################################################
     def dfi_upload (self, path):
@@ -707,7 +711,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception(message)
 
         # dance with the API.
-        return self.__API("/dfi/upload", method="POST", path=path)
+        return self.API("/dfi/upload", method="POST", path=path)
 
     ####################################################################################################################
     def iocdb_list (self, kind=None, ref_link_keyword=None, ref_text_keyword=None):
@@ -735,7 +739,9 @@ class inquestlabs_api:
 
         filtered = []
 
-        for entry in self.__API("/iocdb/list"):
+
+        for entry in self.API("/iocdb/list"):
+
 
             # process filters as disqualifiers.
             if kind is not None and not entry['artifact_type'].startswith(kind.lower()):
@@ -764,7 +770,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.__API("/iocdb/search", dict(keyword=keyword))
+        return self.API("/iocdb/search", dict(keyword=keyword))
 
     ####################################################################################################################
     def iocdb_sources (self):
@@ -775,7 +781,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.__API("/iocdb/sources")
+        return self.API("/iocdb/sources")
 
     ####################################################################################################################
     def rate_limit_banner (self):
@@ -825,7 +831,7 @@ class inquestlabs_api:
 
         filtered = []
 
-        for entry in self.__API("/repdb/list"):
+        for entry in self.API("/repdb/list"):
 
             # process filters as disqualifiers.
             if kind is not None and not entry['data_type'].startswith(kind.lower()):
@@ -851,7 +857,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.__API("/repdb/search", dict(keyword=keyword))
+        return self.API("/repdb/search", dict(keyword=keyword))
 
     ####################################################################################################################
     def repdb_sources (self):
@@ -862,7 +868,7 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        return self.__API("/repdb/sources")
+        return self.API("/repdb/sources")
 
     ####################################################################################################################
     def stats (self):
@@ -873,7 +879,7 @@ class inquestlabs_api:
         :return: List of dictionaries.
         """
 
-        return self.__API("/stats")
+        return self.API("/stats")
 
     ####################################################################################################################
     def yara_b64re (self, regex, endian=None):
@@ -905,7 +911,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception("invalid endianess supplied to yara_b64re: %s" % endian)
 
         # dance with the API and return results.
-        return self.__API("/yara/base64re", data)
+        return self.API("/yara/base64re", data)
 
     ####################################################################################################################
     def yara_hexcase (self, instring):
@@ -919,7 +925,7 @@ class inquestlabs_api:
         :return: Mixed hex case insensitive regular expression.
         """
 
-        return self.__API("/yara/mixcase", dict(instring=instring))
+        return self.API("/yara/mixcase", dict(instring=instring))
 
     ####################################################################################################################
     def yara_widere (self, regex, endian=None):
@@ -948,7 +954,7 @@ class inquestlabs_api:
                 raise inquestlabs_exception("invalid endianess supplied to yara_b64re: %s" % endian)
 
         # dance with the API and return results.
-        return self.__API("/yara/widere", data)
+        return self.API("/yara/widere", data)
 
     ####################################################################################################################
     def yara_uint (self, magic, offset=0, is_hex=False):
@@ -967,7 +973,7 @@ class inquestlabs_api:
         :return: YARA condition looking for magic at offset via uint() magic.
         """
 
-        return self.__API("/yara/trigger", dict(trigger=magic, offset=offset, is_hex=is_hex))
+        return self.API("/yara/trigger", dict(trigger=magic, offset=offset, is_hex=is_hex))
 
 ########################################################################################################################
 ########################################################################################################################
