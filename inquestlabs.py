@@ -291,9 +291,15 @@ class inquestlabs_api:
 
         # something else went wrong.
         else:
-            response_json = response.json()
-            message  = "status=%d error communicating with %s: %s"
-            message %= response.status_code, endpoint, response_json.get("error", "n/a")
+            message  = "status=%d error communicating with %s: "
+            message %= response.status_code, endpoint
+
+            try:
+                response_json = response.json()
+                message += response_json.get("error", "n/a")
+            except:
+                message += str(response.content)
+
             raise inquestlabs_exception(message)
 
     ####################################################################################################################
