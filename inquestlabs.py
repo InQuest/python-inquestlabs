@@ -29,6 +29,7 @@ Options:
     --api=<apikey>      Specify an API key.
     --config=<config>   Configuration file with API key [default: ~/.iqlabskey].
     --debug             Docopt debugging.
+    --filter=<filter>   Filter by attributes type (domain, email, filename, ip, url, xmpid)
     -h --help           Show this screen.
     --hex               Treat <instring> as hex bytes.
     -l --limits         Show remaining API credits and limit reset window.
