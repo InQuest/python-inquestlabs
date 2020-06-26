@@ -712,8 +712,8 @@ class inquestlabs_api:
 
         # ensure the file is an OLE (pre 2007 Office file) or ZIP (post 2007 Office file).
         with open(path, "rb") as fh:
-            if fh.read(2) not in ["\xD0\xCF", "PK"]:
-                message  = "unsupported file type for upload, valid files include: %s"
+            if fh.read(2) not in [b"\xD0\xCF", b"PK"]:
+                message  = "unsupported file type for upload, valid files include: %s, etc..."
                 message %= ", ".join(VALID_TYPES)
                 raise inquestlabs_exception(message)
 
