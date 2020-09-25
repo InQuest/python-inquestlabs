@@ -1,6 +1,10 @@
 # python-inquestlabs
 A Pythonic interface and command line tool for interacting with the [InQuest Labs](https://labs.inquest.net) API. Note that an API key is *not* required to interact with this API. Users without an API key are rate limited to 1,337 requests in 24-hour sliding window and are unable to download samples (sorry, we tried, too much abuse). Fret not however, API keys are free. Simply get in touch letting us know who you are, what kind of research you're doing, and what kind of volume of requests we may expect to see from you.
 
+Searchable API documentation with multi-language snippets: https://labs.inquest.net/docs/
+
+OpenAPI (Swagger) specification: https://app.swaggerhub.com/apis-docs/InQuest.net/InQuestLabs/1.0
+
 ## InQuest Labs Command Line Driver
 ```
 Usage:
