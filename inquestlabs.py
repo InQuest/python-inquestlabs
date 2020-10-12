@@ -517,21 +517,23 @@ class inquestlabs_api:
         return data
 
     ####################################################################################################################
-    def dfi_download (self, sha256, path):
+    def dfi_download (self, sha256, path, encrypt=False):
         """
         Download requested file and save to path.
 
-        :type  sha256: str
-        :param sha256: SHA256 hash for the file we are interested in.
-        :type  path:   str
-        :param path:   Where we want to save the file.
+        :type  sha256:  str
+        :param sha256:  SHA256 hash for the file we are interested in.
+        :type  path:    str
+        :param path:    Where we want to save the file.
+        :type  encrypt: bool
+        :param encrypt: Raise this flag to download the file inside a Zip file encrypted with the password 'infected'.
         """
 
         assert self.is_sha256(sha256)
 
         # NOTE: we're reading the file directly into memory here! not worried about it as the files are small and we
         # done anticipate any OOM issues.
-        data = self.API("/dfi/download", dict(sha256=sha256), raw=True)
+        data = self.API("/dfi/download", dict(sha256=sha256, encrypt_download=encrypt), raw=True)
 
         # ensure we got what we were looking for.
         calculated = self.sha256(bytes=data)
