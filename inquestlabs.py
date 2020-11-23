@@ -82,7 +82,7 @@ class inquestlabs_api:
     """
 
     ####################################################################################################################
-    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True, verbose=0):
+    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=False, verbose=0):
         """
         Instantiate an interface to InQuest Labs. API key is optional but sourced from (in order): argument, environment
         variable, or configuration file. Proxy dictionary is a raw pass thru to python-requests, valid keys are 'http'
@@ -225,8 +225,9 @@ class inquestlabs_api:
         }
 
         # make attempts to dance with the API endpoint, use a jittered exponential back-off delay.
-        endpoint = self.base_url + api
-        attempt  = 0
+        last_exception = None
+        endpoint       = self.base_url + api
+        attempt        = 0
 
         self.__VERBOSE("%s %s" % (method, endpoint), INFO)
 
@@ -238,6 +239,7 @@ class inquestlabs_api:
                 break
 
             except Exception as e:
+                last_exception = e
                 self.__VERBOSE("API exception: %s" % e, INFO)
 
                 # 0.4, 1.6, 6.4, 25.6, ...
@@ -248,6 +250,10 @@ class inquestlabs_api:
             if attempt == self.retries:
                 message = "exceeded %s attempts to communicate with InQuest Labs API endpoint %s."
                 message %= self.retries, endpoint
+
+                if last_exception:
+                    message += "\nlast exception:\n%s" % str(last_exception)
+
                 raise inquestlabs_exception(message)
 
         # update internal rate limit tracking variables.
