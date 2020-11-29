@@ -6,7 +6,7 @@ InQuest Labs Command Line Driver
 Usage:
     inquestlabs [options] dfi list
     inquestlabs [options] dfi details <sha256> [--attributes]
-    inquestlabs [options] dfi download <sha256> <path>
+    inquestlabs [options] dfi download <sha256> <path> [--encrypt]
     inquestlabs [options] dfi attributes <sha256> [--filter=<filter>]
     inquestlabs [options] dfi search (code|context|metadata|ocr) <keyword>
     inquestlabs [options] dfi search (md5|sha1|sha256|sha512) <hash>
@@ -26,13 +26,18 @@ Usage:
     inquestlabs [options] stats
 
 Options:
+    --attributes        Include attributes with DFI record.
     --api=<apikey>      Specify an API key.
+    --big-endian        Toggle big endian.
     --config=<config>   Configuration file with API key [default: ~/.iqlabskey].
     --debug             Docopt debugging.
+    --encrypt           Zip sample with password 'infected' before downloading.
     --filter=<filter>   Filter by attributes type (domain, email, filename, ip, url, xmpid)
     -h --help           Show this screen.
     --hex               Treat <instring> as hex bytes.
     -l --limits         Show remaining API credits and limit reset window.
+    --little-endian     Toggle little endian.
+    --offset=<offset>   Specify an offset other than 0 for the trigger.
     --proxy=<proxy>     Intermediate proxy
     --verbose=<level>   Verbosity level, outputs to stderr [default: 0].
     --version           Show version.
@@ -1019,10 +1024,10 @@ def main ():
         elif args['details']:
             print(json.dumps(labs.dfi_details(args['<sha256>'], args['--attributes'])))
 
-        # inquestlabs [options] dfi download <sha256> <path>
+        # inquestlabs [options] dfi download <sha256> <path> [--encrypt]
         elif args['download']:
             start = time.time()
-            labs.dfi_download(args['<sha256>'], args['<path>'])
+            labs.dfi_download(args['<sha256>'], args['<path>'], args['--encrypt'])
             print("saved %s as '%s' in %d seconds." % (args['<sha256>'], args['<path>'], time.time() - start))
 
         # inquestlabs [options] dfi list
