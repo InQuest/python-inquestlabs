@@ -50,6 +50,10 @@ except:
 import docopt
 import requests
 
+# disable ssl warnings from requests.
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # standard libraries.
 import hashlib
 import random
@@ -111,7 +115,7 @@ class inquestlabs_api:
         self.retries = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
-        self.verbosity   = verbose
+        self.verbosity   = 10 # verbose
 
         # internal rate limit tracking.
         self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
@@ -122,7 +126,7 @@ class inquestlabs_api:
 
         # if no base URL was specified, use the default.
         if self.base_url is None:
-            self.base_url = "https://labs.inquest.net/api"
+            self.base_url = "http://labs.inquest.net:8000/api"
             self.__VERBOSE("base_url=%s" % self.base_url, DEBUG)
 
         # if no config file was supplied, use a default path of ~/.iqlabskey.
@@ -541,13 +545,14 @@ class inquestlabs_api:
         # done anticipate any OOM issues.
         data = self.API("/dfi/download", dict(sha256=sha256, encrypt_download=encrypt), raw=True)
 
-        # ensure we got what we were looking for.
-        calculated = self.sha256(bytes=data)
+        # if we requested a raw download, then ensure we got what we were looking for.
+        if not encrypt:
+            calculated = self.sha256(bytes=data)
 
-        if calculated != sha256:
-            message  = "failed downloading file! expected sha256=%s calculated sha256=%s"
-            message %= sha256, calculated
-            raise inquestlabs_exception(message)
+            if calculated != sha256:
+                message  = "failed downloading file! expected sha256=%s calculated sha256=%s"
+                message %= sha256, calculated
+                raise inquestlabs_exception(message)
 
         # write the file to disk.
         with open(path, "wb+") as fh:
@@ -754,9 +759,7 @@ class inquestlabs_api:
 
         filtered = []
 
-
         for entry in self.API("/iocdb/list"):
-
 
             # process filters as disqualifiers.
             if kind is not None and not entry['artifact_type'].startswith(kind.lower()):
