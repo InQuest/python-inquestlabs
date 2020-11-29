@@ -126,7 +126,7 @@ class inquestlabs_api:
 
         # if no base URL was specified, use the default.
         if self.base_url is None:
-            self.base_url = "http://labs.inquest.net:8000/api"
+            self.base_url = "https://labs.inquest.net/api"
             self.__VERBOSE("base_url=%s" % self.base_url, DEBUG)
 
         # if no config file was supplied, use a default path of ~/.iqlabskey.
