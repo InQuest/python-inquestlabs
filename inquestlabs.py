@@ -115,7 +115,7 @@ class inquestlabs_api:
         self.retries = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
-        self.verbosity   = 10 # verbose
+        self.verbosity   = verbose
 
         # internal rate limit tracking.
         self.rlimit_requests_remaining = None   # requests remaining in this rate limit window.
