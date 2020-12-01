@@ -91,7 +91,7 @@ class inquestlabs_api:
     """
 
     ####################################################################################################################
-    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=False, verbose=0):
+    def __init__ (self, api_key=None, config=None, proxies=None, base_url=None, retries=3, verify_ssl=True, verbose=0):
         """
         Instantiate an interface to InQuest Labs. API key is optional but sourced from (in order): argument, environment
         variable, or configuration file. Proxy dictionary is a raw pass thru to python-requests, valid keys are 'http'
