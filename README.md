@@ -47,7 +47,8 @@ Options:
 The following third-party projects integrate with InQuest Labs:
 
   * [EML Analyzer](https://eml-analyzer.herokuapp.com/) from [@ninoseki](https://twitter.com/ninoseki).
-  * ["Spoken" IOCs](https://github.com/safernandez666/IOC)  from [@safernandez666](https://twitter.com/safernandez666).
+  * ["Spoken" IOCs](https://github.com/safernandez666/IOC) from [@safernandez666](https://twitter.com/safernandez666).
+  * [Axial R4PTOR](https://ax1al.com/projects/r4pt0r) from [@AXI4L](https://twitter.com/AXI4L).
 
 Get in touch or issue a pull-request to get your project listed.
 
