@@ -10,7 +10,7 @@ Usage:
     inquestlabs [options] dfi attributes <sha256> [--filter=<filter>]
     inquestlabs [options] dfi search (code|context|metadata|ocr) <keyword>
     inquestlabs [options] dfi search (md5|sha1|sha256|sha512) <hash>
-    inquestlabs [options] dfi search (domain|email|filename|ip|url|xmpid) <ioc>
+    inquestlabs [options] dfi search (domain|email|filename|filepath|ip|url|xmpid) <ioc>
     inquestlabs [options] dfi sources
     inquestlabs [options] dfi upload <path>
     inquestlabs [options] iocdb list
@@ -32,7 +32,7 @@ Options:
     --config=<config>   Configuration file with API key [default: ~/.iqlabskey].
     --debug             Docopt debugging.
     --encrypt           Zip sample with password 'infected' before downloading.
-    --filter=<filter>   Filter by attributes type (domain, email, filename, ip, url, xmpid)
+    --filter=<filter>   Filter by attributes type (domain, email, filename, filepath, ip, url, xmpid)
     -h --help           Show this screen.
     --hex               Treat <instring> as hex bytes.
     -l --limits         Show remaining API credits and limit reset window.
@@ -73,7 +73,7 @@ __version__ = 1.0
 VALID_CAT  = ["ext", "hash", "ioc"]
 VALID_EXT  = ["code", "context", "metadata", "ocr"]
 VALID_HASH = ["md5", "sha1", "sha256", "sha512"]
-VALID_IOC  = ["domain", "email", "filename", "ip", "url", "xmpid"]
+VALID_IOC  = ["domain", "email", "filename", "filepath", "ip", "url", "xmpid"]
 
 # verbosity levels.
 INFO  = 1
@@ -437,7 +437,7 @@ class inquestlabs_api:
         :type  sha256:  str
         :param sha256:  SHA256 hash for the file we are interested in.
         :type  filter_by: str
-        :param filter_by: Optional filter, can be one of 'domain', 'email', 'filename', 'ip', 'url', 'xmpid'.
+        :param filter_by: Optional filter, can be one of 'domain', 'email', 'filename', 'filepath', ip', 'url', 'xmpid'.
         :rtype:  dict
         :return: API response.
         """
@@ -638,8 +638,8 @@ class inquestlabs_api:
         """
         Search DFI category/subcategory by keyword. Valid categories include: 'ext', 'hash', and 'ioc'. Valid
         subcategories for each include: ext: 'code', 'context', 'metadata', and 'ocr'. hash: 'md5', 'sha1', 'sha256',
-        and 'sha512'. ioc: 'domain', 'email', 'filename', 'ip', 'url', 'xmpid'. See https://labs.inquest.net for more
-        information.
+        and 'sha512'. ioc: 'domain', 'email', 'filename', 'filepath', ip', 'url', 'xmpid'. See https://labs.inquest.net
+        for more information.
 
         Example dictionary returned in list of matched entries::
 
@@ -1062,7 +1062,7 @@ def main ():
                 else:
                     raise inquestlabs_exception("hash search argument parsing fail.")
 
-            # inquestlabs [options] dfi search (domain|email|filename|ip|url|xmpid) <ioc>
+            # inquestlabs [options] dfi search (domain|email|filename|filepath|ip|url|xmpid) <ioc>
             elif args['<ioc>']:
                 if args['domain']:
                     results = labs.dfi_search("ioc", "domain", args['<ioc>'])
@@ -1070,6 +1070,8 @@ def main ():
                     results = labs.dfi_search("ioc", "email", args['<ioc>'])
                 elif args['filename']:
                     results = labs.dfi_search("ioc", "filename", args['<ioc>'])
+                elif args['filepath']:
+                    results = labs.dfi_search("ioc", "filepath", args['<ioc>'])
                 elif args['ip']:
                     results = labs.dfi_search("ioc", "ip", args['<ioc>'])
                 elif args['url']:
