@@ -24,6 +24,7 @@ Usage:
     inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
     inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
     inquestlabs [options] stats
+    inquestlabs [options] setup <apikey>
 
 Options:
     --attributes        Include attributes with DFI record.
@@ -1176,6 +1177,18 @@ def main ():
     ### MISCELLANEOUS ##################################################################################################
     elif args['stats']:
         print(json.dumps(labs.stats()))
+
+    elif args['setup']:
+        if os.path.exists(labs.config_file):
+            print("config file already exists: %s, won't overwrite." % labs.config_file)
+        else:
+            try:
+                with open(labs.config_file, "w+") as fh:
+                    fh.write("[inquestlabs]\n")
+                    fh.write("apikey: %s\n" % args['<apikey>'])
+                print("config file at %s initialized with API key %s" % (labs.config_file, args['<apikey>']))
+            except:
+                print("failed writing apikey to config file: %s" % labs.config_file)
 
     # huh?
     else:
