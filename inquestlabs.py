@@ -222,7 +222,7 @@ class inquestlabs_api:
         }
 
         if self.api_key:
-            headers["Authorization"] = "Basic: %s" % self.api_key
+            headers["Authorization"] = "Basic %s" % self.api_key
 
         # build the keyword arguments that will be passed to requests library.
         kwargs = \
