@@ -1277,10 +1277,6 @@ def main ():
         else:
             raise inquestlabs_exception("trystero argument parsing fail.")
 
-
-
-
-
     # huh?
     else:
         raise inquestlabs_exception("argument parsing fail.")
