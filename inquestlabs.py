@@ -25,6 +25,8 @@ Usage:
     inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
     inquestlabs [options] stats
     inquestlabs [options] setup <apikey>
+    inquestlabs [options] trystero list-days
+    inquestlabs [options] trystero list-samples <yyyy-mm-dd>
 
 Options:
     --attributes        Include attributes with DFI record.
@@ -906,6 +908,72 @@ class inquestlabs_api:
         return self.API("/stats")
 
     ####################################################################################################################
+    def trystero_list_days (self):
+        """
+        Retrieve the list of days and sample counts that we have Trystero data on. For further information on Trystero,
+        see https://labs.inquest.net/trystero for further information. Example data::
+
+            {
+              "2021-08-04": 406,
+              "2021-08-05": 30,
+              "2021-08-06": 49,
+              "2021-08-07": 30,
+              "2021-08-09": 22,
+              "2021-08-10": 36,
+              "first_record": "2020-08-09"
+            }
+
+        :rtype:  dict
+        :return: Dictionary of key=date value=count pairs.
+        """
+
+        return self.API("/trystero/list")
+
+    ####################################################################################################################
+    def trystero_list_samples (self, date):
+        """
+        Retrieve the list of samples from the Trysteo project (these are samples that bypassed either Microsoft, Google,
+        or both. For further information on Trystero, see https://labs.inquest.net/trystero. Example data::
+
+            [
+              {
+                "analysis_completed": false,
+                "available_on_labs": false,
+                "bypasses": "microsoft",
+                "classification": "MALICIOUS",
+                "downloadable": false,
+                "file_type": "OTHER",
+                "first_seen": "2021-08-09T23:16:46",
+                "image": false,
+                "inquest_alerts": [
+                  {
+                    "category": "info",
+                    "description": "Found a Windows Portable Executable (PE) binary. Depending on context, the presence of a binary is suspicious or malicious.",
+                    "reference": null,
+                    "title": "Windows PE Executable"
+                  }
+                ],
+                "last_inquest_featext": null,
+                "mime_type": "application/x-msi",
+                "sha256": "01241e05ebab5c9f010de24dd3e611a4eb5b4ad883bafbb416383195bb423182",
+                "size": 14752768,
+                "subcategory": "maldoc_hunter",
+                "subcategory_url": "https://github.com/InQuest/yara-rules/blob/master/labs.inquest.net/maldoc_hunter.rule",
+                "vt_positives": 4,
+                "vt_weight": 2.799999952316284
+              }
+            ]
+
+        :type date:  str
+        :param date: Date for which we wish to retrieve sample information.
+
+        :rtype:  list
+        :return: List of dictionaries.
+        """
+
+        return self.API("/trystero/%s" % date)
+
+    ####################################################################################################################
     def yara_b64re (self, regex, endian=None):
         """
         Save time and avoid tedious manual labor by automatically converting plain-text regular expressions into their
@@ -1189,6 +1257,29 @@ def main ():
                 print("config file at %s initialized with API key %s" % (labs.config_file, args['<apikey>']))
             except:
                 print("failed writing apikey to config file: %s" % labs.config_file)
+
+    elif args['trystero']:
+
+        # inquestlabs [options] trystero list-days
+        if args['list-days']:
+            print(json.dumps(labs.trystero_list_days()))
+
+        # inquestlabs [options] trystero list-samples <yyyy-mm-dd>
+        elif args['list-samples']:
+            date = args['<yyyy-mm-dd>']
+
+            if re.match("\d{4}-\d{2}-\d{2}", date):
+                print(json.dumps(labs.trystero_list_samples(date)))
+            else:
+                raise inquestlabs_exception("invalidate date format: '%s', expecting ex: '2021-08-09'" % date)
+
+        # huh?
+        else:
+            raise inquestlabs_exception("trystero argument parsing fail.")
+
+
+
+
 
     # huh?
     else:
