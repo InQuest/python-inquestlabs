@@ -23,6 +23,8 @@ Usage:
     inquestlabs [options] yara hexcase <instring>
     inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
     inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
+    inquestlabs [options] lookup ip <ioc>
+    inquestlabs [options] lookup domain <ioc>
     inquestlabs [options] stats
     inquestlabs [options] setup <apikey>
     inquestlabs [options] trystero list-days
@@ -813,6 +815,25 @@ class inquestlabs_api:
         return self.API("/iocdb/sources")
 
     ####################################################################################################################
+    def lookup (self, kind, ioc):
+        """
+        Lookup information regarding IP address or Domain Name.
+
+        :type  kind: str
+        :param kind: One of "IP" or "Domain".
+        :type  ioc:  str
+        :param ioc:  Indicator to lookup.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        kind = kind.lower()
+        assert kind in ["ip", "domain"]
+
+        return self.API("/lookup/%s" % kind, dict(indicator=ioc))
+
+    ####################################################################################################################
     def rate_limit_banner (self):
         """
         Returns a string describing number of API requests made since instantiation, remaining API credits (if a rate
@@ -1245,6 +1266,17 @@ def main ():
         else:
             raise inquestlabs_exception("yara argument parsing fail.")
 
+    ### IP/DOMAIN LOOKUP ###############################################################################################
+    elif args['lookup']:
+        if args['ip']:
+            print(labs.lookup('ip', args['<ioc>']))
+
+        elif args['domain']:
+            print(labs.lookup('domain', args['<ioc>']))
+
+        else:
+            raise inquestlabs_exception("'lookup' supports 'ip' and 'domain'.")
+
     ### MISCELLANEOUS ##################################################################################################
     elif args['stats']:
         print(json.dumps(labs.stats()))
@@ -1261,6 +1293,7 @@ def main ():
             except:
                 print("failed writing apikey to config file: %s" % labs.config_file)
 
+    ### TRYSTERO PROJECT DATA ##########################################################################################
     elif args['trystero']:
 
         # inquestlabs [options] trystero list-days
