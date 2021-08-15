@@ -59,8 +59,11 @@ import docopt
 import requests
 
 # disable ssl warnings from requests.
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except:
+    pass
 
 # standard libraries.
 import hashlib
