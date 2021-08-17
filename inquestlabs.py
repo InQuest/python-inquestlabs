@@ -1269,10 +1269,10 @@ def main ():
     ### IP/DOMAIN LOOKUP ###############################################################################################
     elif args['lookup']:
         if args['ip']:
-            print(labs.lookup('ip', args['<ioc>']))
+            print(json.dumps(labs.lookup('ip', args['<ioc>'])))
 
         elif args['domain']:
-            print(labs.lookup('domain', args['<ioc>']))
+            print(json.dumps(labs.lookup('domain', args['<ioc>'])))
 
         else:
             raise inquestlabs_exception("'lookup' supports 'ip' and 'domain'.")
