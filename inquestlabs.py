@@ -1041,7 +1041,7 @@ class inquestlabs_api:
         job.start()
 
         # wait for jobs to complete.
-        self.__VERBOSE("waiting up to %d seconds for %d jobs to complete" % (timeout, len(jobs)), DEBUG)
+        self.__VERBOSE("waiting up to %d seconds for %d jobs to complete" % (timeout, len(jobs)))
 
         # wait for jobs to complete, up to timeout
         start = time.time()
@@ -1064,7 +1064,7 @@ class inquestlabs_api:
         self.__VERBOSE("completed all jobs in %d seconds" % elapsed)
 
         # return the combined response.
-        return resp
+        return dict(resp)
 
 
     ####################################################################################################################
