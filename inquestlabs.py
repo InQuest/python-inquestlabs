@@ -851,8 +851,11 @@ class inquestlabs_api:
         except:
             return None
 
-        # the ipaddress module expects unicode strings, took me a bit to figure this out.
-        s = unicode(s)
+        # python 2/3 compat
+        try:
+            s = unicode(s)
+        except:
+            pass
 
         # is instance of IPv6 address?
         try:
