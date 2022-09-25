@@ -93,6 +93,15 @@ INFO  = 1
 DEBUG = 2
 
 ########################################################################################################################
+def worker_proxy (labs, endpoint, arguments, response):
+    """
+    proxy function for multiprocessing wrapper used by inquestlabs_api.report()
+    """
+
+    response[endpoint] = getattr(labs, endpoint)(*arguments)
+
+
+########################################################################################################################
 class inquestlabs_exception(Exception):
     pass
 
@@ -993,10 +1002,6 @@ class inquestlabs_api:
         :return: API response.
         """
 
-        # proxy function for multiprocessing.
-        def worker (labs, endpoint, arguments, response):
-            response[endpoint] = getattr(labs, endpoint)(*arguments)
-
         # default timeout.
         if timeout is None:
             timeout = 60
@@ -1018,20 +1023,20 @@ class inquestlabs_api:
 
         # only IPs and domains get lookups.
         if kind in ["ip", "domain"]:
-            job = multiprocessing.Process(target=worker, args=(self, "lookup", [kind, ioc], resp))
+            job = multiprocessing.Process(target=worker_proxy, args=(self, "lookup", [kind, ioc], resp))
             jobs.append(job)
             job.start()
 
         # all IOCs get compared against DFIdb, REPdb, and IOCdb
-        job = multiprocessing.Process(target=worker, args=(self, "dfi_search", ["ioc", kind, ioc], resp))
+        job = multiprocessing.Process(target=worker_proxy, args=(self, "dfi_search", ["ioc", kind, ioc], resp))
         jobs.append(job)
         job.start()
 
-        job = multiprocessing.Process(target=worker, args=(self, "repdb_search", [ioc], resp))
+        job = multiprocessing.Process(target=worker_proxy, args=(self, "repdb_search", [ioc], resp))
         jobs.append(job)
         job.start()
 
-        job = multiprocessing.Process(target=worker, args=(self, "iocdb_search", [ioc], resp))
+        job = multiprocessing.Process(target=worker_proxy, args=(self, "iocdb_search", [ioc], resp))
         jobs.append(job)
         job.start()
 
