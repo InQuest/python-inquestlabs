@@ -10,4 +10,4 @@ script:
 after_success:
   - coveralls
   - coverage xml
-  - bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
+  - if [ "$TRAVIS_BRANCH" = "master" ]; then bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml; fi
