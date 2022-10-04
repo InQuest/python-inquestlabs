@@ -1,3 +1,8 @@
+[![Developed by InQuest](https://inquest.net/images/inquest-badge.svg)](https://inquest.net/)
+[![Build Status](https://app.travis-ci.com/InQuest/python-inquestlabs.svg?branch=master)](https://app.travis-ci.com/InQuest/python-inquestlabs)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/python-inquestlabs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=InQuest/python-inquestlabs&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/python-inquestlabs/dashboard?utm_source=github.com&utm_medium=referral&utm_content=InQuest/python-inquestlabs&utm_campaign=Badge_Coverage)
+
 # python-inquestlabs
 A Pythonic interface and command line tool for interacting with the [InQuest Labs](https://labs.inquest.net) API. Note that an API key is *not* required to interact with this API. An API key does provide the ability to increase their lookback, remove rate limitations, and download available samples. Users can sign-in via OAuth to generate API keys. There is no cost to sign-in. Authentication is supported via LinkedIn, Twitter, Google, and Github. 
 
