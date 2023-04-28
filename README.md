@@ -1,34 +1,31 @@
 [![Developed by InQuest](https://inquest.net/images/inquest-badge.svg)](https://inquest.net/)
-[![Build Status](https://app.travis-ci.com/InQuest/python-inquestlabs.svg?branch=master)](https://app.travis-ci.com/InQuest/python-inquestlabs)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/python-inquestlabs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=InQuest/python-inquestlabs&amp;utm_campaign=Badge_Grade)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/python-inquestlabs/dashboard?utm_source=github.com&utm_medium=referral&utm_content=InQuest/python-inquestlabs&utm_campaign=Badge_Coverage)
+[![Build Status](https://app.travis-ci.com/InQuest/inquestlabs.svg?branch=master)](https://app.travis-ci.com/InQuest/inquestlabs)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/inquestlabs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=InQuest/inquestlabs&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/inquestlabs/dashboard?utm_source=github.com&utm_medium=referral&utm_content=InQuest/inquestlabs&utm_campaign=Badge_Coverage)
 
-# python-inquestlabs
+# InQuest Labs API CLI
 A Pythonic interface and command line tool for interacting with the
-[InQuest Labs](https://labs.inquest.net) API. Note that an API key is *not*
-required to interact with this API. An API key does provide the ability to
-increase their lookback, remove rate limitations, and download available
-samples. Users can sign in via OAuth to generate API keys. There is no cost to
-sign in. Authentication is supported via LinkedIn, Twitter, Google, and
-Github.
+[InQuest Labs](https://labs.inquest.net) API. Note that an API key is *not* required to interact with this API. An API key does provide the ability to increase their lookback, remove rate limitations, and download available samples. Users can sign in via OAuth to generate API keys. There is no cost to sign in. Authentication is supported via LinkedIn, Twitter, Google, and Github.
 
-Searchable API documentation with multi-language snippets:
-<https://labs.inquest.net/docs/>
+Searchable API documentation with multi-language snippets: <https://labs.inquest.net/docs/>
 
-OpenAPI (Swagger) specification:
-<https://app.swaggerhub.com/apis-docs/InQuest.net/InQuestLabs/1.0>
+OpenAPI (Swagger) specification: <https://app.swaggerhub.com/apis-docs/InQuest.net/InQuestLabs/1.0>
 
 ## Installation
-The recommended way to install python-inquestlabs for CLI use is using
+The recommended way to install InQuest Labs API CLI is by using
 [pipx](https://pypa.github.io/pipx/). This installs the package and all
 dependencies in an isolated virtual environment that can be invoked easily.
 
-    pipx install inquestlabs
+```bash
+pipx install inquestlabs
+```
 
-Alternately, or in cases where you want to use python-inquestlabs as a library,
+Alternately, or in cases where you want to use inquestlabs as a library,
 you can install it using [pip](https://pip.pypa.io/).
 
-    pip install inquestlabs
+```bash
+pip install inquestlabs
+```
 
 ## InQuest Labs Command Line Driver
 To see the available command line tools and options, see the output of
@@ -108,16 +105,8 @@ test):
 
 ## The Trystero Project
 
-The vast majority of attacks (>90%) are email-borne. The "Trystero Project" is
-our code name for an experiment that we're actively conducting to measure the
-security efficacy of the two largest mail providers, Google and Microsoft,
-against real-world emerging malware. The basic idea is this... let's take
-real-world threats daily and loop it through the two most popular cloud email
-providers, Google and Microsoft. We'll monitor which samples make it to the
-inbox and compare the results over the time. You can read more, view graphs,
-explore data, and compare results at [InQuest Labs: Trystero
-Project](https://labs.inquest.net/trystero). If you're curious to explore the
-testing corpus further, see the following two command line options:
+The vast majority of attacks (>90%) are email-borne. The "Trystero Project" is our code name for an experiment that we're actively conducting to measure the security efficacy of the two largest mail providers, Google and Microsoft, against real-world emerging malware. The basic idea is this... let's take real-world threats daily and loop it through the two most popular cloud email providers, Google and Microsoft. We'll monitor which samples make it to the inbox and compare the results over the time. You can read more, view graphs,
+explore data, and compare results at [InQuest Labs: Trystero Project](https://labs.inquest.net/trystero). If you're curious to explore the testing corpus further, see the following two command line options:
 
 ### List Trystero Days
 
