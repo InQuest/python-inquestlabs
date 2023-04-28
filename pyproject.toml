@@ -7,8 +7,7 @@ name = "inquestlabs"
 version = "1.2.1"
 license = {file = "LICENSE"}
 authors = [
-    # XXX What email should be used here?
-    { name="InQuest", email="support@inquest.net" },
+	{ name="InQuest", email="labs@inquest.net" },
 ]
 description = "A Pythonic interface and CLI tool for the InQuest Labs API"
 readme = "README.md"
@@ -44,5 +43,5 @@ inquestlabs = "inquestlabs:main"
 
 [project.urls]
 "Homepage" = "https://labs.inquest.net/"
-"Repository" = "https://github.com/InQuest/python-inquestlabs"
-"Bug Tracker" = "https://github.com/InQuest/python-inquestlabs/issues"
+"Repository" = "https://github.com/InQuest/inquestlabs"
+"Bug Tracker" = "https://github.com/InQuest/inquestlabs/issues"
