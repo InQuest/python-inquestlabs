@@ -2,7 +2,7 @@
 ![Developed by InQuest](https://inquest.net/images/inquest-badge.svg)
 ![PyPI Version](http://img.shields.io/pypi/v/inquestlabs.svg)
 
-# InQuest Labs API CLI
+# inquestlabs
 A Pythonic interface and command line tool for interacting with the
 [InQuest Labs](https://labs.inquest.net) API. Note that an API key is *not* required to interact with this API. An API key does provide the ability to increase their lookback, remove rate limitations, and download available samples. Users can sign in via OAuth to generate API keys. There is no cost to sign in. Authentication is supported via LinkedIn, Twitter, Google, and Github.
 
@@ -25,10 +25,12 @@ pip install inquestlabs
 ```
 
 ## InQuest Labs Command Line Driver
-To see the available command line tools and options, see the output of
-`inquestlabs --help`. It'll look something like this:
+To see the available command line tools and options, see the output of `inquestlabs --help`. It'll look something like this:
 
-```
+<details>
+<summary>View example</summary>
+
+```bash
 InQuest Labs Command Line Driver
 
 Usage:
@@ -78,6 +80,9 @@ Options:
     --version           Show version.
 ```
 
+</details>
+<br />
+
 ## InQuest Labs API Integrations
 
 The following third-party projects integrate with InQuest Labs:
@@ -91,14 +96,7 @@ The following third-party projects integrate with InQuest Labs:
 * [Axial R4PTOR](https://ax1al.com/projects/r4pt0r) from
   [@AXI4L](https://twitter.com/AXI4L).
 
-Get in touch or issue a pull-request to get your project listed.
-
-## Testing
-
-Use pytest to test each case (or individually by specifying which file to
-test):
-
-`pytest tests/*`
+Get in touch or issue a pull request to get your project listed.
 
 ## The Trystero Project
 
@@ -106,9 +104,12 @@ The vast majority of attacks (>90%) are email-borne. The "Trystero Project" is o
 
 ### List Trystero Days
 
-For a list of days we have ran the Trystero Project and the number of samples harvested for each day. Note that `first_record` denotes the earliest record (2020-08-09):
+For a list of days we have ran the Trystero Project and the number of samples harvested for each day. Note that `first_record` denotes the earliest record (2020-08-09).
 
-```
+<details>
+<summary>View example</summary>
+
+```bash
 $ inquestlabs trystero list-days | jq .
 {
   "2021-01-08": 27,
@@ -355,11 +356,18 @@ $ inquestlabs trystero list-days | jq .
 }
 ```
 
+</details>
+<br />
+
 ### List Trystero Samples
 
-You can receive further details about each sample from any given daily corpus. Information included is similar to the output of `dfi list` with the addition of `bypasses` that denotes which provider was bypassed and `available_on_labs` which states the sample can be seen on labs.inquest.net:
+You can receive further details about each sample from any given daily corpus. Information included is similar to the output of `dfi list` with the addition of `bypasses` that denotes which provider was bypassed and `available_on_labs` which states the sample can be seen on [labs.inquest.net](https://labs.inquest.net/).
 
-```
+
+<details>
+<summary>View example</summary>
+
+```bash
 $ inquestlabs trystero list-samples 2021-06-29 | jq .
 [
   {
@@ -509,3 +517,5 @@ $ inquestlabs trystero list-samples 2021-06-29 | jq .
   }
 ]
 ```
+
+</details>
