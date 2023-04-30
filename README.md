@@ -1,7 +1,6 @@
-[![Developed by InQuest](https://inquest.net/images/inquest-badge.svg)](https://inquest.net/)
-[![Build Status](https://app.travis-ci.com/InQuest/inquestlabs.svg?branch=master)](https://app.travis-ci.com/InQuest/inquestlabs)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/inquestlabs/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=InQuest/inquestlabs&amp;utm_campaign=Badge_Grade)
-[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/9da8a5cde7c34c849c73969ac3281be8)](https://www.codacy.com/gh/InQuest/inquestlabs/dashboard?utm_source=github.com&utm_medium=referral&utm_content=InQuest/inquestlabs&utm_campaign=Badge_Coverage)
+![Build Status](https://github.com/InQuest/python-inquestlabs/workflows/inquestlabs-workflow/badge.svg?branch=master)
+![Developed by InQuest](https://inquest.net/images/inquest-badge.svg)
+![PyPI Version](http://img.shields.io/pypi/v/inquestlabs.svg)
 
 # InQuest Labs API CLI
 A Pythonic interface and command line tool for interacting with the
@@ -12,9 +11,7 @@ Searchable API documentation with multi-language snippets: <https://labs.inquest
 OpenAPI (Swagger) specification: <https://app.swaggerhub.com/apis-docs/InQuest.net/InQuestLabs/1.0>
 
 ## Installation
-The recommended way to install InQuest Labs API CLI is by using
-[pipx](https://pypa.github.io/pipx/). This installs the package and all
-dependencies in an isolated virtual environment that can be invoked easily.
+The recommended way to install InQuest Labs API CLI is by using [pipx](https://pypa.github.io/pipx/). This installs the package and all dependencies in an isolated virtual environment that can be invoked easily.
 
 ```bash
 pipx install inquestlabs
@@ -105,14 +102,11 @@ test):
 
 ## The Trystero Project
 
-The vast majority of attacks (>90%) are email-borne. The "Trystero Project" is our code name for an experiment that we're actively conducting to measure the security efficacy of the two largest mail providers, Google and Microsoft, against real-world emerging malware. The basic idea is this... let's take real-world threats daily and loop it through the two most popular cloud email providers, Google and Microsoft. We'll monitor which samples make it to the inbox and compare the results over the time. You can read more, view graphs,
-explore data, and compare results at [InQuest Labs: Trystero Project](https://labs.inquest.net/trystero). If you're curious to explore the testing corpus further, see the following two command line options:
+The vast majority of attacks (>90%) are email-borne. The "Trystero Project" is our code name for an experiment that we're actively conducting to measure the security efficacy of the two largest mail providers, Google and Microsoft, against real-world emerging malware. The basic idea is this... let's take real-world threats daily and loop it through the two most popular cloud email providers, Google and Microsoft. We'll monitor which samples make it to the inbox and compare the results over the time. You can read more, view graphs, explore data, and compare results at [InQuest Labs: Trystero Project](https://labs.inquest.net/trystero). If you're curious to explore the testing corpus further, see the following two command line options:
 
 ### List Trystero Days
 
-For a list of days we have ran the Trystero Project and the number of samples
-harvested for each day. Note that `first_record` denotes the earliest record
-(2020-08-09):
+For a list of days we have ran the Trystero Project and the number of samples harvested for each day. Note that `first_record` denotes the earliest record (2020-08-09):
 
 ```
 $ inquestlabs trystero list-days | jq .
@@ -363,10 +357,7 @@ $ inquestlabs trystero list-days | jq .
 
 ### List Trystero Samples
 
-You can receive further details about each sample from any given daily corpus.
-Information included is similar to the output of `dfi list` with the addition
-of `bypasses` that denotes which provider was bypassed and `available_on_labs`
-which states the sample can be seen on labs.inquest.net:
+You can receive further details about each sample from any given daily corpus. Information included is similar to the output of `dfi list` with the addition of `bypasses` that denotes which provider was bypassed and `available_on_labs` which states the sample can be seen on labs.inquest.net:
 
 ```
 $ inquestlabs trystero list-samples 2021-06-29 | jq .
