@@ -79,11 +79,12 @@ import json
 import sys
 import os
 import re
-from importlib.metadata import version
+# from importlib.metadata import version
 
 # extract version from installed package metadata
 __application_name__ = "inquestlabs"
-__version__ = version(__application_name__)
+__version__ = "1.2.1"
+# __version__ = version(__application_name__)
 __full_version__ = f"{__application_name__} {__version__}"
 
 VALID_CAT    = ["ext", "hash", "ioc"]
