@@ -1,0 +1,14 @@
+attrs
+certifi
+charset-normalizer
+docopt
+idna
+iniconfig
+packaging
+pluggy
+py
+pyparsing
+requests
+six
+tomli
+urllib3
