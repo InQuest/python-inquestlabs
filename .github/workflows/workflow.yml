@@ -1,4 +1,4 @@
-name: inquestlabs-workflow
+name: tests
 
 on: [push]
 
