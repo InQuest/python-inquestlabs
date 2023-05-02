@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "inquestlabs"
-version = "1.2.1"
+version = "1.2.2"
 license = {file = "LICENSE"}
 authors = [
 	{ name="InQuest", email="labs@inquest.net" },
@@ -12,10 +12,23 @@ authors = [
 description = "A Pythonic interface and CLI tool for the InQuest Labs API"
 readme = "README.md"
 requires-python = ">=3.9"
-dynamic = ["dependencies"]
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+    "attrs",
+    "certifi",
+    "charset-normalizer",
+    "docopt",
+    "idna",
+    "iniconfig",
+    "packaging",
+    "pluggy",
+    "py",
+    "pyparsing",
+    "requests",
+    "six",
+    "tomli",
+    "urllib3",
+]
 
 classifiers = [
     "Programming Language :: Python :: 3",

@@ -1,4 +1,4 @@
-![Build Status](https://github.com/InQuest/python-inquestlabs/workflows/inquestlabs-workflow/badge.svg?branch=master)
+![Build Status](https://github.com/InQuest/python-inquestlabs/workflows/tests/badge.svg?branch=master)
 ![Developed by InQuest](https://inquest.net/images/inquest-badge.svg)
 ![PyPI Version](http://img.shields.io/pypi/v/inquestlabs.svg)
 
