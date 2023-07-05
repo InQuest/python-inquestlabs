@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "inquestlabs"
-version = "1.2.2"
+version = "1.2.3"
 license = {file = "LICENSE"}
 authors = [
 	{ name="InQuest", email="labs@inquest.net" },
 ]
 description = "A Pythonic interface and CLI tool for the InQuest Labs API"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.6"
 
 dependencies = [
     "attrs",
