@@ -53,6 +53,7 @@ Usage:
     inquestlabs [options] yara hexcase <instring>
     inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
     inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
+    inquestlabs [options] yara cidr <ipv4>
     inquestlabs [options] lookup ip <ioc>
     inquestlabs [options] lookup domain <ioc>
     inquestlabs [options] report <ioc>
