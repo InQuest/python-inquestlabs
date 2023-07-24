@@ -23,6 +23,7 @@ Usage:
     inquestlabs [options] yara hexcase <instring>
     inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
     inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
+    inquestlabs [options] yara cidr <ipv4>
     inquestlabs [options] lookup ip <ioc>
     inquestlabs [options] lookup domain <ioc>
     inquestlabs [options] report <ioc>
@@ -83,7 +84,7 @@ import re
 
 # extract version from installed package metadata
 __application_name__ = "inquestlabs"
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 # __version__ = version(__application_name__)
 __full_version__ = f"{__application_name__} {__version__}"
 
@@ -144,7 +145,7 @@ class inquestlabs_api:
         self.api_key     = api_key
         self.base_url    = base_url
         self.config_file = config
-        self.retries = retries
+        self.retries     = retries
         self.proxies     = proxies
         self.verify_ssl  = verify_ssl
         self.verbosity   = verbose
@@ -214,7 +215,7 @@ class inquestlabs_api:
             self.__VERBOSE("api_key_source=%s" % self.api_key_source, INFO)
 
     ####################################################################################################################
-    def API (self, api, data=None, path=None, method="GET", raw=False):
+    def API (self, api, data=None, path=None, method="GET", raw=False, params=None):
         """
         Internal API wrapper.
 
@@ -228,6 +229,8 @@ class inquestlabs_api:
         :param method: API method, one of "GET" or "POST".
         :type  raw:    bool
         :param raw:    Default behavior is to expect JSON encoded content, raise this flag to expect raw data.
+        :type  method: str
+        :param method: Set a parameter for the request.
 
         :rtype:  dict | str
         :return: Response dictionary or string if 'raw' flag is raised.
@@ -258,6 +261,7 @@ class inquestlabs_api:
             "headers" : headers,
             "proxies" : self.proxies,
             "verify"  : self.verify_ssl,
+            "params"  : params
         }
 
         # make attempts to dance with the API endpoint, use a jittered exponential back-off delay.
@@ -1243,6 +1247,23 @@ class inquestlabs_api:
 
         return self.API("/yara/trigger", dict(trigger=magic, offset=offset, is_hex=is_hex))
 
+    ####################################################################################################################
+    def cidr_to_regex (self, data):
+        """
+        Produce a regular expression from a IPv4 CIDR notation in a form suitable for usage as a YARA string.
+
+        :type  regex:  str
+        :param regex:  Regular expression to convert.
+
+        :rtype:  str
+        :return: Regex string suitable for YARA.
+        """
+
+        # dance with the API and return results.
+        return self.API("/yara/cidr2regex", params={
+            "cidr": data
+        })
+
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
@@ -1413,6 +1434,10 @@ def main ():
         # inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
         elif args['widere']:
             print(labs.yara_widere(args['<regex>'], endian))
+
+        # inquestlabs [options] yara cidr <ipv4>
+        elif args['cidr']:
+            print(labs.cidr_to_regex(args['<ipv4>']))
 
         # huh?
         else:
