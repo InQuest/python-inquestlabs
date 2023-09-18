@@ -13,17 +13,15 @@ Usage:
     inquestlabs [options] dfi search (domain|email|filename|filepath|ip|registry|url|xmpid) <ioc>
     inquestlabs [options] dfi sources
     inquestlabs [options] dfi upload <path>
+    inquestlabs [options] gepetto scan <url>
+    inquestlabs [options] gepetto report <url_hash>
+    inquestlabs [options] gepetto screenshot <url_hash>
     inquestlabs [options] iocdb list
     inquestlabs [options] iocdb search <keyword>
     inquestlabs [options] iocdb sources
     inquestlabs [options] repdb list
     inquestlabs [options] repdb search <keyword>
     inquestlabs [options] repdb sources
-    inquestlabs [options] yara (b64re|base64re) <regex> [(--big-endian|--little-endian)]
-    inquestlabs [options] yara hexcase <instring>
-    inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
-    inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
-    inquestlabs [options] yara cidr <ipv4>
     inquestlabs [options] lookup ip <ioc>
     inquestlabs [options] lookup domain <ioc>
     inquestlabs [options] report <ioc>
@@ -31,6 +29,11 @@ Usage:
     inquestlabs [options] setup <apikey>
     inquestlabs [options] trystero list-days
     inquestlabs [options] trystero list-samples <yyyy-mm-dd>
+    inquestlabs [options] yara (b64re|base64re) <regex> [(--big-endian|--little-endian)]
+    inquestlabs [options] yara hexcase <instring>
+    inquestlabs [options] yara uint <instring> [--offset=<offset>] [--hex]
+    inquestlabs [options] yara widere <regex> [(--big-endian|--little-endian)]
+    inquestlabs [options] yara cidr <ipv4>
 
 Options:
     --attributes        Include attributes with DFI record.
@@ -72,6 +75,7 @@ except:
 
 # standard libraries.
 import multiprocessing
+import urllib.parse
 import ipaddress
 import hashlib
 import random
@@ -770,6 +774,62 @@ class inquestlabs_api:
         return self.API("/dfi/upload", method="POST", path=path)
 
     ####################################################################################################################
+    def gepetto_report (self, url_hash):
+        """
+        Given a URL hash (returned from gepetto_scan()), retrieve the Gepetto report.
+
+        :type  url_hash: str
+        :param url_hash: URL hash for the URL we previously requested analysis of.
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        return self.API("/gepetto/report", dict(url_hash=url_hash))
+
+    ####################################################################################################################
+    def gepetto_scan (self, url):
+        """
+        Passes a URL to InQuest Labs Gepetto headless Chrome browser for inspection. Retruns a URL hash that must be
+        used to subsequently retrieve the report and/or screenshot.
+
+        :type  url: str
+        :param url: URL we with to analyze
+
+        :rtype:  dict
+        :return: API response.
+        """
+
+        # validate we're working with an HTTP/HTTPS url.
+        scheme = urllib.parse.urlparse(url).scheme.lower()
+
+        if scheme not in ["http", "https"]:
+            raise inquestlabs_exception("invalid URL scheme, only HTTP/HTTPS supported: %s" % scheme)
+
+        return self.API("/gepetto/scan", dict(url=url))
+
+    ####################################################################################################################
+    def gepetto_screenshot (self, url_hash):
+        """
+        Given a URL hash (returned from gepetto_scan()), write the Gepetto rendered screenshot to disk as $URL_HASH.png
+
+        :type  url_hash: str
+        :param url_hash: URL hash for the URL we previously requested analysis of.
+
+        :rtype:  bool
+        :return: True on success, False otherwise.
+        """
+
+        response = self.API("/gepetto/screenshot", dict(url_hash=url_hash), raw=True)
+
+        if response.startswith(b"\x89\x50\x4e\x47"):
+            with open("%s.png" % url_hash, "wb+") as fh:
+                fh.write(response)
+                return True
+        else:
+            return False
+
+    ####################################################################################################################
     def iocdb_list (self, kind=None, ref_link_keyword=None, ref_text_keyword=None):
         """
         Retrieve a list of the most recent entries added to the InQuest Labs IOC database. Example data::
@@ -1276,6 +1336,9 @@ def main ():
         print(args)
         return
 
+    # Hardcode API key here for Gepetto
+    args['--api'] = ""
+
     # instantiate interface to InQuest Labs.
     labs = inquestlabs_api(args['--api'], args['--config'], args['--proxy'], verbose=int(args['--verbose']))
 
@@ -1455,7 +1518,7 @@ def main ():
             raise inquestlabs_exception("'lookup' supports 'ip' and 'domain'.")
 
     ### IP/DOMAIN/URL REPORT ###########################################################################################
-    elif args['report']:
+    elif args['report'] and not args['gepetto']:
         print(json.dumps(labs.report(args['<ioc>'], args['--timeout'])))
 
     ### MISCELLANEOUS ##################################################################################################
@@ -1494,6 +1557,25 @@ def main ():
         else:
             raise inquestlabs_exception("trystero argument parsing fail.")
 
+    ### GEPETTO HEADLESS CHROME ########################################################################################
+    elif args['gepetto']:
+
+        if args['scan']:
+            print(json.dumps(labs.gepetto_scan(args['<url>'])))
+
+        elif args['report']:
+            print(json.dumps(labs.gepetto_report(args['<url_hash>'])))
+
+        elif args['screenshot']:
+            if labs.gepetto_screenshot(args['<url_hash>']):
+                print("Successfully wrote to %s.png" % args['<url_hash>'])
+            else:
+                print("There was an error retrieving the screenshot.")
+
+        else:
+            raise inquestlabs_exception("trystero argument parsing fail.")
+
+    ### INVALID ARGUMENTS ##############################################################################################
     # huh?
     else:
         raise inquestlabs_exception("argument parsing fail.")
