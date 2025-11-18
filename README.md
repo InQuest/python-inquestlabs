@@ -2,6 +2,8 @@
 ![Developed by InQuest](https://inquest.net/images/inquest-badge.svg)
 ![PyPI Version](http://img.shields.io/pypi/v/inquestlabs.svg)
 
+# RETIRED November 2025
+
 # inquestlabs
 A Pythonic interface and command line tool for interacting with the
 [InQuest Labs](https://labs.inquest.net) API. Note that an API key is *not* required to interact with this API. An API key does provide the ability to increase their lookback, remove rate limitations, and download available samples. Users can sign in via OAuth to generate API keys. There is no cost to sign in. Authentication is supported via LinkedIn, Twitter, Google, and Github.
